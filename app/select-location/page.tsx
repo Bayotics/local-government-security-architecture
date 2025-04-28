@@ -10,7 +10,7 @@ import { Loader2, AlertCircle } from "lucide-react"
 import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Navbar } from "@/components/navbar"
-import { NigeriaStatesMap } from "@/components/nigeria-states-map"
+// import { NigeriaStatesMap } from "@/components/nigeria-states-map"
 import { StateLGAMap } from "@/components/state-lga-map"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -240,12 +240,12 @@ export default function SelectLocation() {
 
           {showMap && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 mb-4">
+              {/* <TabsList className="grid grid-cols-2 mb-4">
                 <TabsTrigger value="lga">State View</TabsTrigger>
                 <TabsTrigger value="state">Country View</TabsTrigger>
-              </TabsList>
+              </TabsList> */}
 
-              <TabsContent value="state">
+              {/* <TabsContent value="state">
                 <NigeriaStatesMap
                   selectedState={selectedState}
                   selectedLga={selectedLga}
@@ -253,7 +253,7 @@ export default function SelectLocation() {
                   loading={loadingScores}
                   error={scoreError}
                 />
-              </TabsContent>
+              </TabsContent> */}
 
               <TabsContent value="lga">
                 <StateLGAMap
