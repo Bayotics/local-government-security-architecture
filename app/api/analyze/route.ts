@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Format the data for the AI
     const prompt = `
       I need a comprehensive security analysis for ${lga} Local Government in ${state} State, Nigeria.
       

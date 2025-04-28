@@ -10,6 +10,9 @@ import { Loader2, AlertCircle } from "lucide-react"
 import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Navbar } from "@/components/navbar"
+import { NigeriaStatesMap } from "@/components/nigeria-states-map"
+import { StateLGAMap } from "@/components/state-lga-map"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface State {
   id: number
@@ -22,6 +25,15 @@ interface LocalGovernment {
   state_id: number
 }
 
+interface LGAScore {
+  state: string
+  lga: string
+  count: number
+  averageScores: {
+    [key: string]: number
+  }
+}
+
 export default function SelectLocation() {
   const router = useRouter()
   const [states, setStates] = useState<State[]>([])
@@ -31,6 +43,11 @@ export default function SelectLocation() {
   const [selectedLga, setSelectedLga] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(true)
   const [usingFallbackData, setUsingFallbackData] = useState(false)
+  const [showMap, setShowMap] = useState(false)
+  const [lgaScores, setLgaScores] = useState<LGAScore[]>([])
+  const [loadingScores, setLoadingScores] = useState(false)
+  const [scoreError, setScoreError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("state")
 
   // Check authentication
   useEffect(() => {
@@ -103,6 +120,35 @@ export default function SelectLocation() {
     }
   }, [selectedState, lgas, states])
 
+  // Fetch LGA scores when both state and LGA are selected
+  useEffect(() => {
+    const fetchLGAScores = async () => {
+      if (!selectedState || !selectedLga) return
+
+      try {
+        setLoadingScores(true)
+        setScoreError(null)
+        setShowMap(true)
+
+        const response = await fetch("/api/analysis/lga-scores")
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch LGA scores")
+        }
+
+        const data = await response.json()
+        setLgaScores(data)
+      } catch (error: any) {
+        console.error("Error fetching LGA scores:", error)
+        setScoreError(error.message || "Failed to fetch LGA scores")
+      } finally {
+        setLoadingScores(false)
+      }
+    }
+
+    fetchLGAScores()
+  }, [selectedState, selectedLga])
+
   const handleContinue = () => {
     if (selectedState && selectedLga) {
       // Clear previous survey data
@@ -113,9 +159,6 @@ export default function SelectLocation() {
       localStorage.setItem("selectedState", selectedState)
       localStorage.setItem("selectedLga", selectedLga)
 
-      // Log to verify values are set
-      console.log("Setting localStorage values:", { selectedState, selectedLga })
-
       // Navigate to survey page
       router.push("/survey")
     }
@@ -124,9 +167,9 @@ export default function SelectLocation() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-        <div className="w-full max-w-md">
-          <Card>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4">
+        <div className="max-w-3xl mx-auto">
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle>Select Your Location</CardTitle>
               <CardDescription>Choose your state and local government area</CardDescription>
@@ -144,7 +187,14 @@ export default function SelectLocation() {
                   <div className="grid gap-6">
                     <div className="grid gap-2">
                       <Label htmlFor="state">State</Label>
-                      <Select value={selectedState} onValueChange={setSelectedState}>
+                      <Select
+                        value={selectedState}
+                        onValueChange={(value) => {
+                          setSelectedState(value)
+                          setSelectedLga("")
+                          setShowMap(false)
+                        }}
+                      >
                         <SelectTrigger id="state">
                           <SelectValue placeholder="Select a state" />
                         </SelectTrigger>
@@ -187,6 +237,35 @@ export default function SelectLocation() {
               </Button>
             </CardFooter>
           </Card>
+
+          {showMap && (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-2 mb-4">
+                <TabsTrigger value="lga">State View</TabsTrigger>
+                <TabsTrigger value="state">Country View</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="state">
+                <NigeriaStatesMap
+                  selectedState={selectedState}
+                  selectedLga={selectedLga}
+                  lgaScores={lgaScores}
+                  loading={loadingScores}
+                  error={scoreError}
+                />
+              </TabsContent>
+
+              <TabsContent value="lga">
+                <StateLGAMap
+                  selectedState={selectedState}
+                  selectedLga={selectedLga}
+                  lgaScores={lgaScores}
+                  loading={loadingScores}
+                  error={scoreError}
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </div>
     </>
