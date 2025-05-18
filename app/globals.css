@@ -74,4 +74,9 @@
     @apply bg-background text-foreground;
     /* color: #0ec95c; */
   }
+  .lga-label {
+    pointer-events: none;
+    white-space: nowrap;
+    text-align: center;
+  }
 }

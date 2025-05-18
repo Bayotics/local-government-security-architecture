@@ -6,12 +6,14 @@ import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { nigerianLGAs } from "@/lib/nigeria-data"
-import { getBorderingLGAs } from "./nigeria-lga-borders"
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { features } from "@/lgaShapes";
 import { useMap } from "react-leaflet"
 import { useMemo } from "react"
 import L from "leaflet";
+import booleanIntersects from "@turf/boolean-intersects"
+import { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
+
 
 
 
@@ -55,6 +57,36 @@ const getScoreColor = (score: number): string => {
   return "#111827" // gray-900
 }
 
+function getCentroid(coords: any[]): [number, number] {
+  const flat = coords.flat(Infinity).filter((c: any) => Array.isArray(c) && c.length === 2)
+
+  const sum = flat.reduce(
+    (acc: [number, number], coord: [number, number]) => [acc[0] + coord[0], acc[1] + coord[1]],
+    [0, 0]
+  )
+
+  return [sum[0] / flat.length, sum[1] / flat.length]
+}
+
+function haversineDistance(coord1: [number, number], coord2: [number, number]): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+
+  const [lat1, lon1] = coord1
+  const [lat2, lon2] = coord2
+
+  const R = 6371 // Earth radius in km
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return R * c
+}
+
 export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, error }: StateLGAMapProps) {
   const [lgasInState, setLgasInState] = useState<string[]>([])
   const [borderLGAs, setBorderLGAs] = useState<string[]>([])
@@ -79,38 +111,54 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
   // Process LGA data when scores or selected LGA changes
   useEffect(() => {
     if (selectedLga && lgaScores.length > 0) {
-      // Get bordering LGAs using our data
-      const bordering = getBorderingLGAs(selectedState, selectedLga)
-      setBorderLGAs(bordering)
+  const selectedFeature = features.find(f => f.properties.shapeName === selectedLga)
 
-      // Create a map of LGA data with scores and colors
-      const newLgaData = new Map<string, { score: number; color: string; hasSurvey: boolean }>()
+  if (selectedFeature) {
+    const neighbors: string[] = []
 
-      // Process all LGAs in this state
-      lgasInState.forEach((lga) => {
-        // Find score data for this LGA
-        const lgaScoreData = lgaScores.find((item) => item.lga === lga && item.state === selectedState)
+    for (const feature of features) {
+      const name = feature.properties.shapeName
 
-        if (lgaScoreData) {
-          // LGA has survey data
-          const score = calculateOverallScore(lgaScoreData.averageScores)
-          newLgaData.set(lga, {
-            score,
-            color: getScoreColor(score),
-            hasSurvey: true,
-          })
-        } else {
-          // LGA has no survey data
-          newLgaData.set(lga, {
-            score: 0,
-            color: "#e2e8f0", // slate-200 (light gray)
-            hasSurvey: false,
-          })
-        }
-      })
+      if (name === selectedLga) continue
 
-      setLgaData(newLgaData)
+      const isAdjacent = booleanIntersects(
+        selectedFeature as TurfFeature<Polygon | MultiPolygon>,
+        feature as TurfFeature<Polygon | MultiPolygon>
+      )
+
+      if (isAdjacent) {
+        neighbors.push(name)
+      }
     }
+
+    setBorderLGAs(neighbors)
+  }
+
+  // Build score/color map (unchanged)
+  const newLgaData = new Map<string, { score: number; color: string; hasSurvey: boolean }>()
+
+  lgasInState.forEach((lga) => {
+    const lgaScoreData = lgaScores.find((item) => item.lga === lga && item.state === selectedState)
+
+    if (lgaScoreData) {
+      const score = calculateOverallScore(lgaScoreData.averageScores)
+      newLgaData.set(lga, {
+        score,
+        color: getScoreColor(score),
+        hasSurvey: true,
+      })
+    } else {
+      newLgaData.set(lga, {
+        score: 0,
+        color: "#e2e8f0",
+        hasSurvey: false,
+      })
+    }
+  })
+
+  setLgaData(newLgaData)
+}
+
   }, [selectedLga, lgaScores, lgasInState, selectedState])
 
   // Zoom on select function
@@ -145,7 +193,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
 
   useEffect(() => {
     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [20, 20] })
+      map.fitBounds(bounds, { padding: [100, 100] })
     }
   }, [bounds, map])
 
@@ -276,9 +324,11 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                     scrollWheelZoom={false}
                     style={{ height: "500px", width: "100%" }}
                   >
+                    {/* attribution='&copy; <a href="https://carto.com/">Carto</a>'
+                      url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" */}
                     <TileLayer
-                      attribution='&copy; <a href="https://carto.com/">Carto</a>'
-                      url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                      attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <ZoomToLGAs selected={selectedLga} borders={borderLGAs} />
                     {features
@@ -287,9 +337,8 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                           feature.properties.shapeName === selectedLga || borderLGAs.includes(feature.properties.shapeName)
                       )
                       .map((feature, index) => {
-                        const color = "#0ec95c"
                         const isSelected = feature.properties.shapeName === selectedLga
-
+                        const color = isSelected ? "#1d4ed8" : "#10b981"
                         return (
                           <GeoJSON
                             key={index}
