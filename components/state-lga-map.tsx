@@ -7,6 +7,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { nigerianLGAs } from "@/lib/nigeria-data"
 import { getBorderingLGAs } from "./nigeria-lga-borders"
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { features } from "@/lgaShapes";
+import { useMap } from "react-leaflet"
+import { useMemo } from "react"
+import L from "leaflet";
+
+
 
 // Define types for our data
 interface LGAScore {
@@ -105,6 +112,46 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
       setLgaData(newLgaData)
     }
   }, [selectedLga, lgaScores, lgasInState, selectedState])
+
+  // Zoom on select function
+  function ZoomToLGAs({ selected, borders }: { selected: string; borders: string[] }) {
+  const map = useMap()
+
+  const bounds = useMemo(() => {
+    const selectedFeatures = features.filter(
+      (feature) =>
+        feature.properties.shapeName === selected || borders.includes(feature.properties.shapeName)
+    )
+
+    const allCoords: [number, number][] = []
+
+    selectedFeatures.forEach((feature) => {
+      const coords = feature.geometry.coordinates
+
+      // Flatten coordinates for both single and multi polygons
+      const flatCoords = feature.geometry.type === "Polygon"
+        ? coords[0]
+        : coords.flat(2)
+
+      flatCoords.forEach((coord: number[]) => {
+        if (Array.isArray(coord) && coord.length === 2) {
+          allCoords.push([coord[1], coord[0]]) // lat, lng
+        }
+      })
+    })
+
+    return L.latLngBounds(allCoords)
+  }, [selected, borders])
+
+  useEffect(() => {
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [20, 20] })
+    }
+  }, [bounds, map])
+
+  return null
+}
+
 
   return (
     <Card className="mt-6">
@@ -217,6 +264,48 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                     </div>
                   )
                 })}
+              </div>
+            </div>
+            <div className="mt-8">
+              {/* GeoJSON Map */}
+              <div className="mt-6">
+                <div className="text-sm font-medium mb-2">Map View</div>
+                  <MapContainer
+                    center={[9.082, 8.6753]} // Nigeria center
+                    zoom={6}
+                    scrollWheelZoom={false}
+                    style={{ height: "500px", width: "100%" }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://carto.com/">Carto</a>'
+                      url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    />
+                    <ZoomToLGAs selected={selectedLga} borders={borderLGAs} />
+                    {features
+                      .filter(
+                        (feature) =>
+                          feature.properties.shapeName === selectedLga || borderLGAs.includes(feature.properties.shapeName)
+                      )
+                      .map((feature, index) => {
+                        const color = "#0ec95c"
+                        const isSelected = feature.properties.shapeName === selectedLga
+
+                        return (
+                          <GeoJSON
+                            key={index}
+                            data={feature as any}
+                            style={{
+                              color,
+                              weight: isSelected ? 3 : 1,
+                              fillOpacity: 0.5,
+                            }}
+                            onEachFeature={(f, layer) => {
+                              layer.bindPopup(`${feature.properties.shapeName}`)
+                            }}
+                          />
+                        )
+                      })}
+                  </MapContainer>
               </div>
             </div>
           </div>

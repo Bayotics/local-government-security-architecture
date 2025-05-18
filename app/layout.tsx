@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
 import "./globals.css"
+import 'leaflet/dist/leaflet.css'
 
 const inter = Inter({ subsets: ["latin"] })
 
