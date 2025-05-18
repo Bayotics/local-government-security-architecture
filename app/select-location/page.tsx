@@ -239,32 +239,42 @@ export default function SelectLocation() {
           </Card>
 
           {showMap && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 mb-4">
-                <TabsTrigger value="lga">State View</TabsTrigger>
-                <TabsTrigger value="state">Country View</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="state">
-                <NigeriaStatesMap
+            <div>
+              <StateLGAMap
                   selectedState={selectedState}
                   selectedLga={selectedLga}
                   lgaScores={lgaScores}
                   loading={loadingScores}
                   error={scoreError}
                 />
-              </TabsContent>
+            </div>
+            
+            // <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            //   <TabsList className="grid grid-cols-2 mb-4">
+            //     <TabsTrigger value="lga">State View</TabsTrigger>
+            //     {/* <TabsTrigger value="state">Country View</TabsTrigger> */}
+            //   </TabsList>
 
-              <TabsContent value="lga">
-                <StateLGAMap
-                  selectedState={selectedState}
-                  selectedLga={selectedLga}
-                  lgaScores={lgaScores}
-                  loading={loadingScores}
-                  error={scoreError}
-                />
-              </TabsContent>
-            </Tabs>
+            //   <TabsContent value="state">
+            //     <NigeriaStatesMap
+            //       selectedState={selectedState}
+            //       selectedLga={selectedLga}
+            //       lgaScores={lgaScores}
+            //       loading={loadingScores}
+            //       error={scoreError}
+            //     />
+            //   </TabsContent>
+
+            //   <TabsContent value="lga">
+            //     <StateLGAMap
+            //       selectedState={selectedState}
+            //       selectedLga={selectedLga}
+            //       lgaScores={lgaScores}
+            //       loading={loadingScores}
+            //       error={scoreError}
+            //     />
+            //   </TabsContent>
+            // </Tabs>
           )}
         </div>
       </div>
