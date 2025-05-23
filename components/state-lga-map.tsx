@@ -193,7 +193,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
 
   useEffect(() => {
     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [100, 100] })
+      map.fitBounds(bounds, { padding: [80, 80] })
     }
   }, [bounds, map])
 
@@ -326,10 +326,10 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                   >
                     {/* attribution='&copy; <a href="https://carto.com/">Carto</a>'
                       url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" */}
-                    <TileLayer
+                    {/* <TileLayer
                       attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
+                    /> */}
                     <ZoomToLGAs selected={selectedLga} borders={borderLGAs} />
                     {features
                       .filter(
@@ -337,8 +337,23 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                           feature.properties.shapeName === selectedLga || borderLGAs.includes(feature.properties.shapeName)
                       )
                       .map((feature, index) => {
-                        const isSelected = feature.properties.shapeName === selectedLga
-                        const color = isSelected ? "#1d4ed8" : "#10b981"
+                        const lgaName = feature.properties.shapeName
+                        const isSelected = lgaName === selectedLga
+                        const data = lgaData.get(lgaName)
+
+                        // Decide color
+                        let color = "#10b981" // Default for neighbors with no data
+                        if (isSelected) {
+                          color = "#1d4ed8"
+                        } else if (data?.hasSurvey) {
+                          color = getScoreColor(data.score)
+                        }
+
+                        // Popup label
+                        const popupLabel = data?.hasSurvey
+                          ? `${lgaName} - Rating: ${data.score}/10`
+                          : `${lgaName} - No data`
+
                         return (
                           <GeoJSON
                             key={index}
@@ -349,7 +364,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                               fillOpacity: 0.5,
                             }}
                             onEachFeature={(f, layer) => {
-                              layer.bindPopup(`${feature.properties.shapeName}`)
+                              layer.bindPopup(popupLabel)
                             }}
                           />
                         )
