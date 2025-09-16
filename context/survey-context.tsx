@@ -2,22 +2,27 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import { sections } from "@/lib/survey-data"
+import { sections, calculateLSAr } from "@/lib/survey-data"
 
 interface SurveyContextType {
-  answers: Record<string, number>
-  setAnswer: (questionId: string, value: number) => void
+  answers: Record<string, string> // Changed from number to string to store option IDs
+  setAnswer: (questionId: string, optionId: string) => void
   currentSectionIndex: number
   setCurrentSectionIndex: (index: number) => void
   isComplete: boolean
+  canProceedToNextSection: (sectionIndex: number) => boolean
+  getSectionScore: (sectionId: string) => number
+  getOverallLSAr: () => number
   selectedState: string | null
   selectedLga: string | null
+  setSelectedState: (state: string | null) => void
+  setSelectedLga: (lga: string | null) => void
 }
 
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined)
 
 export function SurveyProvider({ children }: { children: React.ReactNode }) {
-  const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [answers, setAnswers] = useState<Record<string, string>>({}) // Changed to string
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0)
   const [selectedState, setSelectedState] = useState<string | null>(null)
   const [selectedLga, setSelectedLga] = useState<string | null>(null)
@@ -71,19 +76,56 @@ export function SurveyProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("currentSectionIndex", currentSectionIndex.toString())
   }, [currentSectionIndex])
 
-  const setAnswer = (questionId: string, value: number) => {
+  const setAnswer = (questionId: string, optionId: string) => {
     setAnswers((prev) => {
-      const newAnswers = { ...prev, [questionId]: value }
+      const newAnswers = { ...prev, [questionId]: optionId }
       return newAnswers
     })
   }
 
-  // Calculate if all sections have at least 3 questions answered
+  const getSectionScore = (sectionId: string): number => {
+    const section = sections.find((s) => s.id === sectionId)
+    if (!section) return 0
+
+    let totalScore = 0
+    let answeredQuestions = 0
+
+    section.questions.forEach((question) => {
+      const selectedOptionId = answers[question.id]
+      if (selectedOptionId) {
+        const selectedOption = question.options.find((opt) => opt.id === selectedOptionId)
+        if (selectedOption) {
+          totalScore += selectedOption.score
+          answeredQuestions++
+        }
+      }
+    })
+
+    // If section total is negative, return 0 as per requirements
+    if (totalScore < 0) return 0
+
+    // Convert to percentage (out of 10 possible points)
+    return answeredQuestions > 0 ? Math.max(0, (totalScore / answeredQuestions) * 10) : 0
+  }
+
+  const canProceedToNextSection = (sectionIndex: number): boolean => {
+    const section = sections[sectionIndex]
+    if (!section) return false
+
+    // All questions in the section must be answered
+    return section.questions.every((question) => answers[question.id] !== undefined)
+  }
+
+  const getOverallLSAr = (): number => {
+    const sectionScores: Record<string, number> = {}
+    sections.forEach((section) => {
+      sectionScores[section.id] = getSectionScore(section.id)
+    })
+    return calculateLSAr(sectionScores)
+  }
+
   const isComplete = sections.every((section) => {
-    // Count how many questions have been answered in this section
-    const answeredQuestions = section.questions.filter((q) => answers[q.id] !== undefined)
-    // Section is complete if at least 3 questions are answered
-    return answeredQuestions.length >= 3
+    return section.questions.every((q) => answers[q.id] !== undefined)
   })
 
   return (
@@ -94,8 +136,13 @@ export function SurveyProvider({ children }: { children: React.ReactNode }) {
         currentSectionIndex,
         setCurrentSectionIndex,
         isComplete,
+        canProceedToNextSection,
+        getSectionScore,
+        getOverallLSAr,
         selectedState,
         selectedLga,
+        setSelectedState,
+        setSelectedLga,
       }}
     >
       {children}

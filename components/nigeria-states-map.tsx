@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { nigerianStates } from "@/lib/nigeria-data"
+import { calculateLSAr, getColorCoding } from "@/lib/survey-data"
 
 // Define types for our data
 interface LGAScore {
@@ -23,28 +24,6 @@ interface NigeriaStatesMapProps {
   lgaScores: LGAScore[]
   loading: boolean
   error: string | null
-}
-
-// Calculate the overall average score for an LGA
-const calculateOverallScore = (scores: { [key: string]: number }): number => {
-  const values = Object.values(scores)
-  if (values.length === 0) return 0
-
-  const sum = values.reduce((acc, val) => acc + val, 0)
-  return Number.parseFloat((sum / values.length).toFixed(1))
-}
-
-// Get color based on score
-const getScoreColor = (score: number): string => {
-  if (score >= 9) return "#3b82f6" // blue-500
-  if (score >= 8) return "#8b5cf6" // purple-500
-  if (score >= 7) return "#22c55e" // green-500
-  if (score >= 6) return "#eab308" // yellow-500
-  if (score >= 5) return "#f97316" // orange-500
-  if (score >= 4) return "#ef4444" // red-500
-  if (score >= 3) return "#b91c1c" // red-700
-  if (score >= 2) return "#374151" // gray-700
-  return "#111827" // gray-900
 }
 
 // Nigeria state coordinates (simplified for visualization)
@@ -89,9 +68,9 @@ const stateCoordinates: Record<string, { x: number; y: number; width: number; he
 }
 
 export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loading, error }: NigeriaStatesMapProps) {
-  const [stateData, setStateData] = useState<Map<string, { score: number; color: string; hasSurvey: boolean }>>(
-    new Map(),
-  )
+  const [stateData, setStateData] = useState<
+    Map<string, { lsarScore: number; color: string; label: string; hasSurvey: boolean }>
+  >(new Map())
   const [lgasInSelectedState, setLgasInSelectedState] = useState<LGAScore[]>([])
 
   // Process state data when scores change
@@ -103,36 +82,39 @@ export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loadin
 
       lgaScores.forEach((lgaScore) => {
         const { state } = lgaScore
-        const score = calculateOverallScore(lgaScore.averageScores)
+        const lsarScore = calculateLSAr(lgaScore.averageScores)
 
         // Add score to state's scores array
         if (!stateScores.has(state)) {
           stateScores.set(state, [])
         }
-        stateScores.get(state)?.push(score)
+        stateScores.get(state)?.push(lsarScore)
 
         // Mark state as having survey data
         stateSurveys.set(state, true)
       })
 
-      // Calculate average score for each state
-      const newStateData = new Map<string, { score: number; color: string; hasSurvey: boolean }>()
+      // Calculate average LSAr score for each state
+      const newStateData = new Map<string, { lsarScore: number; color: string; label: string; hasSurvey: boolean }>()
 
       nigerianStates.forEach((state) => {
         const scores = stateScores.get(state.name) || []
         const hasSurvey = stateSurveys.has(state.name)
 
         if (hasSurvey && scores.length > 0) {
-          const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length
+          const avgLSArScore = scores.reduce((sum, score) => sum + score, 0) / scores.length
+          const colorCoding = getColorCoding(avgLSArScore)
           newStateData.set(state.name, {
-            score: Number.parseFloat(avgScore.toFixed(1)),
-            color: getScoreColor(avgScore),
+            lsarScore: Number.parseFloat(avgLSArScore.toFixed(1)),
+            color: colorCoding.color,
+            label: colorCoding.label,
             hasSurvey: true,
           })
         } else {
           newStateData.set(state.name, {
-            score: 0,
+            lsarScore: 0,
             color: "#e2e8f0", // slate-200 (light gray)
+            label: "No Data",
             hasSurvey: false,
           })
         }
@@ -149,9 +131,9 @@ export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loadin
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Nigeria Security Map</CardTitle>
+        <CardTitle>Nigeria LSAr Map</CardTitle>
         <CardDescription>
-          Security ratings across Nigeria{selectedState ? ` - ${selectedState} State selected` : ""}
+          Local Security Architecture ratings across Nigeria{selectedState ? ` - ${selectedState} State selected` : ""}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -199,7 +181,7 @@ export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loadin
                         className="transition-all duration-200"
                       >
                         <title>
-                          {state} {data?.hasSurvey ? `(${data.score}/10)` : "(No data)"}
+                          {state} {data?.hasSurvey ? `(${data.lsarScore}% - ${data.label})` : "(No data)"}
                         </title>
                       </rect>
                       <text
@@ -219,24 +201,21 @@ export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loadin
               </svg>
             </div>
 
-            {/* Legend */}
             <div>
-              <div className="text-sm font-medium mb-2">Security Rating Scale</div>
+              <div className="text-sm font-medium mb-2">LSAr Rating Scale</div>
               <div className="flex">
-                <div className="flex-1 h-4" style={{ backgroundColor: "#111827" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#374151" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#b91c1c" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#ef4444" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#f97316" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#eab308" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#22c55e" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#8b5cf6" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#3b82f6" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#EF4444" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#EAB308" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#3B82F6" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#F97316" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#8B5CF6" }}></div>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>0</span>
-                <span>5</span>
-                <span>10</span>
+                <span>Red (0-20%)</span>
+                <span>Yellow (21-40%)</span>
+                <span>Blue (41-60%)</span>
+                <span>Orange (61-80%)</span>
+                <span>Purple (81-100%)</span>
               </div>
             </div>
 
@@ -247,7 +226,8 @@ export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loadin
                 {lgasInSelectedState.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {lgasInSelectedState.map((lgaScore) => {
-                      const score = calculateOverallScore(lgaScore.averageScores)
+                      const lsarScore = calculateLSAr(lgaScore.averageScores)
+                      const colorCoding = getColorCoding(lsarScore)
                       const isSelected = lgaScore.lga === selectedLga
                       return (
                         <div
@@ -258,10 +238,13 @@ export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loadin
                         >
                           <div
                             className="w-4 h-4 rounded-full mr-2"
-                            style={{ backgroundColor: getScoreColor(score) }}
+                            style={{ backgroundColor: colorCoding.color }}
                           ></div>
                           <span className="flex-1 truncate">{lgaScore.lga}</span>
-                          <span>{score}/10</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{lsarScore.toFixed(1)}%</div>
+                            <div className="text-xs text-muted-foreground">{colorCoding.label}</div>
+                          </div>
                         </div>
                       )
                     })}

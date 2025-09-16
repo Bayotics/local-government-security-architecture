@@ -1,7 +1,14 @@
+export interface QuestionOption {
+  id: string
+  text: string
+  score: number // 1, 0, or -1 based on column
+}
+
 export interface Question {
   id: string
   text: string
   section: string
+  options: QuestionOption[]
 }
 
 export interface Section {
@@ -9,355 +16,697 @@ export interface Section {
   title: string
   description: string
   questions: Question[]
+  weight: number // Weight for final calculation
 }
 
 export const sections: Section[] = [
   {
-    id: "authority",
-    title: "Authority & Governance",
-    description:
-      "Questions about leadership, governance structures, and decision-making processes related to security.",
+    id: "decision-making",
+    title: "Local Security Decision Making Authority",
+    description: "Questions regarding local security decision making authority and governance.",
+    weight: 2,
     questions: [
       {
-        id: "authority-1",
-        text: "How effective is the local government leadership in addressing security concerns?",
-        section: "authority",
+        id: "decision-1",
+        text: "If there is a breach in security, who gets to know first in the LGA?",
+        section: "decision-making",
+        options: [
+          { id: "d1-1", text: "LGA Chair", score: 1 },
+          { id: "d1-2", text: "Div Police Officer", score: 1 },
+          { id: "d1-3", text: "Trad Ruler", score: 1 },
+          { id: "d1-4", text: "Cmmty Ldr", score: 1 },
+          { id: "d1-5", text: "Unsure", score: 0 },
+          { id: "d1-6", text: "Any other personality or entity", score: -1 },
+        ],
       },
       {
-        id: "authority-2",
-        text: "To what extent do security agencies collaborate with local government authorities?",
-        section: "authority",
+        id: "decision-2",
+        text: "Does the LG have a full-fledged Dept of Security?",
+        section: "decision-making",
+        options: [
+          { id: "d2-1", text: "Yes", score: 1 },
+          { id: "d2-2", text: "Unsure", score: 0 },
+          { id: "d2-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "authority-3",
-        text: "How clear are the lines of authority during security emergencies?",
-        section: "authority",
+        id: "decision-3",
+        text: "Is there a standing Committee for security decision making in LGA?",
+        section: "decision-making",
+        options: [
+          { id: "d3-1", text: "Yes", score: 1 },
+          { id: "d3-2", text: "Unsure", score: 0 },
+          { id: "d3-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "authority-4",
-        text: "How well do local leaders communicate security policies to citizens?",
-        section: "authority",
+        id: "decision-4",
+        text: "Are there community reps in the Committee such as traditional rulers, community/youth/women leaders, faith based organisations, NGOs?",
+        section: "decision-making",
+        options: [
+          { id: "d4-1", text: "Yes", score: 1 },
+          { id: "d4-2", text: "Unsure", score: 0 },
+          { id: "d4-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "authority-5",
-        text: "How responsive is the local government to security incidents?",
-        section: "authority",
+        id: "decision-5",
+        text: "How often does the Security Committee meet?",
+        section: "decision-making",
+        options: [
+          { id: "d5-1", text: "Daily", score: 1 },
+          { id: "d5-2", text: "Emergency", score: 1 },
+          { id: "d5-3", text: "Unsure", score: 0 },
+          { id: "d5-4", text: "Weekly", score: 0 },
+          { id: "d5-5", text: "Monthly", score: -1 },
+          { id: "d5-6", text: "Quarterly", score: -1 },
+        ],
       },
       {
-        id: "authority-6",
-        text: "How effective is coordination between traditional leaders and formal security structures?",
-        section: "authority",
+        id: "decision-6",
+        text: "Does LG have security professionals to analyse information before security decisions are made?",
+        section: "decision-making",
+        options: [
+          { id: "d6-1", text: "Yes", score: 1 },
+          { id: "d6-2", text: "Unsure", score: 0 },
+          { id: "d6-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "authority-7",
-        text: "To what extent are security decisions made transparently?",
-        section: "authority",
+        id: "decision-7",
+        text: "Is LGA Chairman responsible for security decision making in LGA?",
+        section: "decision-making",
+        options: [
+          { id: "d7-1", text: "Yes", score: 1 },
+          { id: "d7-2", text: "Unsure", score: 0 },
+          { id: "d7-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "authority-8",
-        text: "How well-defined are the roles of different security stakeholders in the local government?",
-        section: "authority",
+        id: "decision-8",
+        text: "How long does it take for security decisions to be made after a security alert?",
+        section: "decision-making",
+        options: [
+          { id: "d8-1", text: "Within 48 hours", score: 1 },
+          { id: "d8-2", text: "Unsure", score: 0 },
+          { id: "d8-3", text: "Within a week", score: 0 },
+          { id: "d8-4", text: "After a week", score: -1 },
+        ],
       },
       {
-        id: "authority-9",
-        text: "How effective is the implementation of security policies at the local level?",
-        section: "authority",
+        id: "decision-9",
+        text: "Does LG Chairman have to clear security decisions from a higher authority before implementation?",
+        section: "decision-making",
+        options: [
+          { id: "d9-1", text: "No", score: 1 },
+          { id: "d9-2", text: "Unsure", score: 0 },
+          { id: "d9-3", text: "Yes", score: -1 },
+        ],
       },
       {
-        id: "authority-10",
-        text: "How accountable are security officials for their actions in the local government?",
-        section: "authority",
+        id: "decision-10",
+        text: "Can LG Chairman instruct the Police and/or security agencies in the locality on security decisions made?",
+        section: "decision-making",
+        options: [
+          { id: "d10-1", text: "Yes", score: 1 },
+          { id: "d10-2", text: "Unsure", score: 0 },
+          { id: "d10-3", text: "No", score: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "instruments",
+    title: "Development of Local Security Instruments",
+    description: "Questions regarding development of local security instruments.",
+    weight: 1,
+    questions: [
+      {
+        id: "instruments-1",
+        text: "Does the LGA have a duly elected Chairman or an appointed leadership?",
+        section: "instruments",
+        options: [
+          { id: "i1-1", text: "Yes", score: 1 },
+          { id: "i1-2", text: "Unsure", score: 0 },
+          { id: "i1-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-2",
+        text: "Does the LGA have an active legislature?",
+        section: "instruments",
+        options: [
+          { id: "i2-1", text: "Yes", score: 1 },
+          { id: "i2-2", text: "Unsure", score: 0 },
+          { id: "i2-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-3",
+        text: "Does LGA have a Department responsible for developing security instruments?",
+        section: "instruments",
+        options: [
+          { id: "i3-1", text: "Yes", score: 1 },
+          { id: "i3-2", text: "Unsure", score: 0 },
+          { id: "i3-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-4",
+        text: "Does the LGA have a trained security practitioner heading this Department?",
+        section: "instruments",
+        options: [
+          { id: "i4-1", text: "Yes", score: 1 },
+          { id: "i4-2", text: "Unsure", score: 0 },
+          { id: "i4-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-5",
+        text: "Does the LGA have Byelaw(s) on security provision?",
+        section: "instruments",
+        options: [
+          { id: "i5-1", text: "Yes", score: 1 },
+          { id: "i5-2", text: "Unsure", score: 0 },
+          { id: "i5-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-6",
+        text: "Does the LGA have Regulations on security provision?",
+        section: "instruments",
+        options: [
+          { id: "i6-1", text: "Yes", score: 1 },
+          { id: "i6-2", text: "Unsure", score: 0 },
+          { id: "i6-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-7",
+        text: "Does the LGA have an MOU with government and/or non-governmental organisations on security provision?",
+        section: "instruments",
+        options: [
+          { id: "i7-1", text: "Yes", score: 1 },
+          { id: "i7-2", text: "Unsure", score: 0 },
+          { id: "i7-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-8",
+        text: "Does the LGA have protocol(s) and Standard Operating Procedures guiding various agencies on security provision in the LGA?",
+        section: "instruments",
+        options: [
+          { id: "i8-1", text: "Yes", score: 1 },
+          { id: "i8-2", text: "Unsure", score: 0 },
+          { id: "i8-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "instruments-9",
+        text: "Are security laws/regulations in the LGA made by the State Government?",
+        section: "instruments",
+        options: [
+          { id: "i9-1", text: "No", score: 1 },
+          { id: "i9-2", text: "Unsure", score: 0 },
+          { id: "i9-3", text: "Yes", score: -1 },
+        ],
+      },
+      {
+        id: "instruments-10",
+        text: "Has the LGA conducted any capacity building programme on the development of security instruments?",
+        section: "instruments",
+        options: [
+          { id: "i10-1", text: "Yes", score: 1 },
+          { id: "i10-2", text: "Unsure", score: 0 },
+          { id: "i10-3", text: "No", score: 0 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "intelligence",
+    title: "Local Security Intelligence and Early Warning",
+    description: "Questions regarding local security intelligence gathering and early warning.",
+    weight: 2,
+    questions: [
+      {
+        id: "intelligence-1",
+        text: "Which organisations are responsible for security intelligence gathering in the LGA?",
+        section: "intelligence",
+        options: [
+          { id: "in1-1", text: "NPF", score: 1 },
+          { id: "in1-2", text: "DSS", score: 1 },
+          { id: "in1-3", text: "Vigilante", score: 1 },
+          { id: "in1-4", text: "Unsure", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-2",
+        text: "Do these organisations share their intelligence with the LG Chairman on a need-to-know basis?",
+        section: "intelligence",
+        options: [
+          { id: "in2-1", text: "Yes", score: 1 },
+          { id: "in2-2", text: "Unsure", score: 0 },
+          { id: "in2-3", text: "No", score: -1 },
+        ],
+      },
+      {
+        id: "intelligence-3",
+        text: "Does the LG have its own independent intelligence gathering organisation?",
+        section: "intelligence",
+        options: [
+          { id: "in3-1", text: "Yes", score: 1 },
+          { id: "in3-2", text: "Unsure", score: 0 },
+          { id: "in3-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-4",
+        text: "Which entities are part of this organisation?",
+        section: "intelligence",
+        options: [
+          { id: "in4-1", text: "Trad Ruler", score: 1 },
+          { id: "in4-2", text: "Cmmty Ldr", score: 1 },
+          { id: "in4-3", text: "Unsure", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-5",
+        text: "Is security intelligence in the LGA enabled by technology such as drones, CCTV?",
+        section: "intelligence",
+        options: [
+          { id: "in5-1", text: "Yes", score: 1 },
+          { id: "in5-2", text: "Unsure", score: 0 },
+          { id: "in5-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-6",
+        text: "Does the LG conduct capacity building programmes on local intelligence gathering?",
+        section: "intelligence",
+        options: [
+          { id: "in6-1", text: "Yes", score: 1 },
+          { id: "in6-2", text: "Unsure", score: 0 },
+          { id: "in6-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-7",
+        text: "Does the LG have a fusion centre for local intelligence coordination and analysis?",
+        section: "intelligence",
+        options: [
+          { id: "in7-1", text: "Yes", score: 1 },
+          { id: "in7-2", text: "Unsure", score: 0 },
+          { id: "in7-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-8",
+        text: "Does the LG have its own independent structures for security early warning?",
+        section: "intelligence",
+        options: [
+          { id: "in8-1", text: "Yes", score: 1 },
+          { id: "in8-2", text: "Unsure", score: 0 },
+          { id: "in8-3", text: "No", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-9",
+        text: "Which medium is typically used for dissemination of security early warning?",
+        section: "intelligence",
+        options: [
+          { id: "in9-1", text: "Radio", score: 1 },
+          { id: "in9-2", text: "TV", score: 1 },
+          { id: "in9-3", text: "Oral tradition", score: 1 },
+          { id: "in9-4", text: "Unsure", score: 0 },
+        ],
+      },
+      {
+        id: "intelligence-10",
+        text: "Does the LG have an electronic medium that covers the entire local government area?",
+        section: "intelligence",
+        options: [
+          { id: "in10-1", text: "Yes", score: 1 },
+          { id: "in10-2", text: "Unsure", score: 0 },
+          { id: "in10-3", text: "No", score: 0 },
+        ],
       },
     ],
   },
   {
     id: "resources",
-    title: "Resources & Personnel",
-    description:
-      "Questions about human resources, equipment, and material resources available for security operations.",
+    title: "Dedicated Resources for Local Security Provision",
+    description: "Questions regarding dedicated resources for local security provision.",
+    weight: 2,
     questions: [
       {
         id: "resources-1",
-        text: "How adequate is the number of security personnel in the local government?",
+        text: "Does the LG annually conduct a process of budgeting?",
         section: "resources",
+        options: [
+          { id: "r1-1", text: "Yes", score: 1 },
+          { id: "r1-2", text: "Unsure", score: 0 },
+          { id: "r1-3", text: "No", score: -1 },
+        ],
       },
       {
         id: "resources-2",
-        text: "How well-equipped are the security personnel with necessary tools and equipment?",
+        text: "Who approves this Budget?",
         section: "resources",
+        options: [
+          { id: "r2-1", text: "LG Chair", score: 1 },
+          { id: "r2-2", text: "LG Council", score: 1 },
+          { id: "r2-3", text: "Unsure", score: 0 },
+          { id: "r2-4", text: "State Govt", score: -1 },
+        ],
       },
       {
         id: "resources-3",
-        text: "How accessible are emergency response resources during security incidents?",
+        text: "Where does the LG get statutory funding from?",
         section: "resources",
+        options: [
+          { id: "r3-1", text: "Fed Govt", score: 1 },
+          { id: "r3-2", text: "State Govt", score: 1 },
+          { id: "r3-3", text: "Unsure", score: 0 },
+        ],
       },
       {
         id: "resources-4",
-        text: "How sufficient are the vehicles and transportation resources for security operations?",
+        text: "Does the LG Budget usually contain provisions for security?",
         section: "resources",
+        options: [
+          { id: "r4-1", text: "Yes", score: 1 },
+          { id: "r4-2", text: "Unsure", score: 0 },
+          { id: "r4-3", text: "No", score: -1 },
+        ],
       },
       {
         id: "resources-5",
-        text: "How well-trained are the security personnel in the local government?",
+        text: "Are the provisions for security based on a formal security survey and security need assessment?",
         section: "resources",
+        options: [
+          { id: "r5-1", text: "Yes", score: 1 },
+          { id: "r5-2", text: "Unsure", score: 0 },
+          { id: "r5-3", text: "No", score: 0 },
+        ],
       },
       {
         id: "resources-6",
-        text: "How adequate are the communication tools and systems for security operations?",
+        text: "What is the typical percentage provision for security compared to the total budget?",
         section: "resources",
+        options: [
+          { id: "r6-1", text: "Above 10%", score: 1 },
+          { id: "r6-2", text: "Unsure", score: 0 },
+          { id: "r6-3", text: "Below 10%", score: -1 },
+        ],
       },
       {
         id: "resources-7",
-        text: "How well-maintained are the security equipment and resources?",
+        text: "Is the fund made available for security sufficient for security needs?",
         section: "resources",
+        options: [
+          { id: "r7-1", text: "Yes", score: 1 },
+          { id: "r7-2", text: "Unsure", score: 0 },
+          { id: "r7-3", text: "No", score: 0 },
+        ],
       },
       {
         id: "resources-8",
-        text: "How efficient is the distribution of security resources across different areas?",
+        text: "Does the LG always get its budget for security?",
         section: "resources",
+        options: [
+          { id: "r8-1", text: "Yes", score: 1 },
+          { id: "r8-2", text: "Unsure", score: 0 },
+          { id: "r8-3", text: "No", score: 0 },
+        ],
       },
       {
         id: "resources-9",
-        text: "How adequate are the medical and first aid resources for emergency situations?",
+        text: "Does the LG regularly receive support from the State Government on security?",
         section: "resources",
+        options: [
+          { id: "r9-1", text: "Yes", score: 1 },
+          { id: "r9-2", text: "Unsure", score: 0 },
+          { id: "r9-3", text: "No", score: 0 },
+        ],
       },
       {
         id: "resources-10",
-        text: "How sufficient are the protective gear and equipment for security personnel?",
+        text: "Does the LG have other non-governmental sources of financial support for security?",
         section: "resources",
+        options: [
+          { id: "r10-1", text: "Yes", score: 1 },
+          { id: "r10-2", text: "Unsure", score: 0 },
+          { id: "r10-3", text: "No", score: 0 },
+        ],
       },
     ],
   },
   {
-    id: "funding",
-    title: "Funding & Budget Allocation",
-    description:
-      "Questions about financial resources, budget allocation, and funding mechanisms for security initiatives.",
+    id: "institutions",
+    title: "Local Security Intervention Institutions and Mechanisms",
+    description: "Questions regarding local security response institutions and mechanisms.",
+    weight: 2,
     questions: [
       {
-        id: "funding-1",
-        text: "How adequate is the budget allocation for security operations in the local government?",
-        section: "funding",
+        id: "institutions-1",
+        text: "Does the state have a local security outfit?",
+        section: "institutions",
+        options: [
+          { id: "inst1-1", text: "Yes", score: 1 },
+          { id: "inst1-2", text: "Unsure", score: 0 },
+          { id: "inst1-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-2",
-        text: "How transparent is the management of security funds?",
-        section: "funding",
+        id: "institutions-2",
+        text: "Does the LG have a local equivalent of the state security outfit?",
+        section: "institutions",
+        options: [
+          { id: "inst2-1", text: "Yes", score: 1 },
+          { id: "inst2-2", text: "Unsure", score: 0 },
+          { id: "inst2-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-3",
-        text: "How timely is the release of funds for security operations?",
-        section: "funding",
+        id: "institutions-3",
+        text: "Does the LG have an independent security outfit by any designation such as vigilante, community watch etc?",
+        section: "institutions",
+        options: [
+          { id: "inst3-1", text: "Yes", score: 1 },
+          { id: "inst3-2", text: "Unsure", score: 0 },
+          { id: "inst3-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-4",
-        text: "How equitable is the distribution of security funding across different areas?",
-        section: "funding",
+        id: "institutions-4",
+        text: "Does the LG have trained personnel to carry out critical security functions?",
+        section: "institutions",
+        options: [
+          { id: "inst4-1", text: "Yes", score: 1 },
+          { id: "inst4-2", text: "Unsure", score: 0 },
+          { id: "inst4-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-5",
-        text: "How sufficient is the funding for security training and capacity building?",
-        section: "funding",
+        id: "institutions-5",
+        text: "Does the LG have protocols with the NPF and/or other security agencies for prompt security response?",
+        section: "institutions",
+        options: [
+          { id: "inst5-1", text: "Yes", score: 1 },
+          { id: "inst5-2", text: "Unsure", score: 0 },
+          { id: "inst5-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-6",
-        text: "How adequate is the funding for maintenance of security equipment?",
-        section: "funding",
+        id: "institutions-6",
+        text: "Does the LG have an active socio-economic scheme to improve living conditions of people as a (non-kinetic) security measure?",
+        section: "institutions",
+        options: [
+          { id: "inst6-1", text: "Yes", score: 1 },
+          { id: "inst6-2", text: "Unsure", score: 0 },
+          { id: "inst6-3", text: "No", score: -1 },
+        ],
       },
       {
-        id: "funding-7",
-        text: "How well are security funding needs assessed and prioritized?",
-        section: "funding",
+        id: "institutions-7",
+        text: "Does the LG have ADR measures in place in times of conflict?",
+        section: "institutions",
+        options: [
+          { id: "inst7-1", text: "Yes", score: 1 },
+          { id: "inst7-2", text: "Unsure", score: 0 },
+          { id: "inst7-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-8",
-        text: "How effective are the mechanisms for tracking security expenditures?",
-        section: "funding",
+        id: "institutions-8",
+        text: "Does the LG have facilities and equipment for security ISR?",
+        section: "institutions",
+        options: [
+          { id: "inst8-1", text: "Yes", score: 1 },
+          { id: "inst8-2", text: "Unsure", score: 0 },
+          { id: "inst8-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-9",
-        text: "How sufficient is the emergency funding for unexpected security challenges?",
-        section: "funding",
+        id: "institutions-9",
+        text: "Does the LG have the capacity for security interdiction?",
+        section: "institutions",
+        options: [
+          { id: "inst9-1", text: "Yes", score: 1 },
+          { id: "inst9-2", text: "Unsure", score: 0 },
+          { id: "inst9-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "funding-10",
-        text: "How sustainable are the current funding models for long-term security needs?",
-        section: "funding",
+        id: "institutions-10",
+        text: "Does the LG have an ongoing operation to maintain security or fight insecurity?",
+        section: "institutions",
+        options: [
+          { id: "inst10-1", text: "Yes", score: 1 },
+          { id: "inst10-2", text: "Unsure", score: 0 },
+          { id: "inst10-3", text: "No", score: 0 },
+        ],
       },
     ],
   },
   {
-    id: "infrastructure",
-    title: "Infrastructure & Facilities",
-    description:
-      "Questions about physical infrastructure, facilities, and structural elements supporting security operations.",
+    id: "evaluation",
+    title: "Local Security Performance Measurement and Evaluation",
+    description: "Questions regarding local security performance monitoring, measurement, evaluation and improvement.",
+    weight: 1,
     questions: [
       {
-        id: "infrastructure-1",
-        text: "How adequate are the security checkpoints and outposts in strategic locations?",
-        section: "infrastructure",
+        id: "evaluation-1",
+        text: "Does the LG have a documented set of local security performance measurement indicators (PMIs) or measurement standards?",
+        section: "evaluation",
+        options: [
+          { id: "e1-1", text: "Yes", score: 1 },
+          { id: "e1-2", text: "Unsure", score: 0 },
+          { id: "e1-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-2",
-        text: "How well-maintained are the police stations and security facilities?",
-        section: "infrastructure",
+        id: "evaluation-2",
+        text: "Does the LG have a system of periodic (annual) security planning?",
+        section: "evaluation",
+        options: [
+          { id: "e2-1", text: "Yes", score: 1 },
+          { id: "e2-2", text: "Unsure", score: 0 },
+          { id: "e2-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-3",
-        text: "How sufficient is the lighting in public spaces for nighttime security?",
-        section: "infrastructure",
+        id: "evaluation-3",
+        text: "Does the LG have the capacity to conduct routine security PMEs?",
+        section: "evaluation",
+        options: [
+          { id: "e3-1", text: "Yes", score: 1 },
+          { id: "e3-2", text: "Unsure", score: 0 },
+          { id: "e3-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-4",
-        text: "How adequate are the emergency shelters and safe houses in the local government?",
-        section: "infrastructure",
+        id: "evaluation-4",
+        text: "Does the LG conduct security surveys?",
+        section: "evaluation",
+        options: [
+          { id: "e4-1", text: "Yes", score: 1 },
+          { id: "e4-2", text: "Unsure", score: 0 },
+          { id: "e4-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-5",
-        text: "How well-designed are the roads and access routes for emergency response?",
-        section: "infrastructure",
+        id: "evaluation-5",
+        text: "Does the LG conduct security need assessment?",
+        section: "evaluation",
+        options: [
+          { id: "e5-1", text: "Yes", score: 1 },
+          { id: "e5-2", text: "Unsure", score: 0 },
+          { id: "e5-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-6",
-        text: "How secure are the critical infrastructure facilities (water, electricity, etc.)?",
-        section: "infrastructure",
+        id: "evaluation-6",
+        text: "Does the LG have a local security database?",
+        section: "evaluation",
+        options: [
+          { id: "e6-1", text: "Yes", score: 1 },
+          { id: "e6-2", text: "Unsure", score: 0 },
+          { id: "e6-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-7",
-        text: "How adequate are the surveillance systems in public areas?",
-        section: "infrastructure",
+        id: "evaluation-7",
+        text: "Does the LG have a system of periodic analysis and evaluation of security preparedness?",
+        section: "evaluation",
+        options: [
+          { id: "e7-1", text: "Yes", score: 1 },
+          { id: "e7-2", text: "Unsure", score: 0 },
+          { id: "e7-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-8",
-        text: "How well-equipped are the emergency response centers?",
-        section: "infrastructure",
+        id: "evaluation-8",
+        text: "Does the LG have a local security reporting system?",
+        section: "evaluation",
+        options: [
+          { id: "e8-1", text: "Yes", score: 1 },
+          { id: "e8-2", text: "Unsure", score: 0 },
+          { id: "e8-3", text: "No", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-9",
-        text: "How accessible are security facilities to all communities in the local government?",
-        section: "infrastructure",
+        id: "evaluation-9",
+        text: "Who does the LG report security PME to?",
+        section: "evaluation",
+        options: [
+          { id: "e9-1", text: "State Govt", score: 1 },
+          { id: "e9-2", text: "Unsure", score: 0 },
+          { id: "e9-3", text: "Others", score: 0 },
+        ],
       },
       {
-        id: "infrastructure-10",
-        text: "How resilient is the security infrastructure against attacks or natural disasters?",
-        section: "infrastructure",
-      },
-    ],
-  },
-  {
-    id: "community",
-    title: "Community Engagement",
-    description:
-      "Questions about public participation, community involvement, and citizen engagement in security matters.",
-    questions: [
-      {
-        id: "community-1",
-        text: "How active are community policing initiatives in the local government?",
-        section: "community",
-      },
-      {
-        id: "community-2",
-        text: "How willing are citizens to report suspicious activities to authorities?",
-        section: "community",
-      },
-      {
-        id: "community-3",
-        text: "How effective are community-security agency partnerships?",
-        section: "community",
-      },
-      {
-        id: "community-4",
-        text: "How well-informed are citizens about security threats and precautions?",
-        section: "community",
-      },
-      {
-        id: "community-5",
-        text: "How inclusive are security decision-making processes of community input?",
-        section: "community",
-      },
-      {
-        id: "community-6",
-        text: "How effective are neighborhood watch programs in the local government?",
-        section: "community",
-      },
-      {
-        id: "community-7",
-        text: "How strong is the trust between security agencies and local communities?",
-        section: "community",
-      },
-      {
-        id: "community-8",
-        text: "How effective are public awareness campaigns about security issues?",
-        section: "community",
-      },
-      {
-        id: "community-9",
-        text: "How engaged are youth in positive security initiatives?",
-        section: "community",
-      },
-      {
-        id: "community-10",
-        text: "How effective are conflict resolution mechanisms at the community level?",
-        section: "community",
-      },
-    ],
-  },
-  {
-    id: "technology",
-    title: "Technology & Intelligence",
-    description:
-      "Questions about technological tools, intelligence gathering, and information systems for security operations.",
-    questions: [
-      {
-        id: "technology-1",
-        text: "How advanced are the surveillance technologies used by security agencies?",
-        section: "technology",
-      },
-      {
-        id: "technology-2",
-        text: "How effective are the intelligence gathering methods in the local government?",
-        section: "technology",
-      },
-      {
-        id: "technology-3",
-        text: "How well-integrated are the different security information systems?",
-        section: "technology",
-      },
-      {
-        id: "technology-4",
-        text: "How adequate is the technological training for security personnel?",
-        section: "technology",
-      },
-      {
-        id: "technology-5",
-        text: "How effective are the early warning systems for security threats?",
-        section: "technology",
-      },
-      {
-        id: "technology-6",
-        text: "How secure are the communication channels used by security agencies?",
-        section: "technology",
-      },
-      {
-        id: "technology-7",
-        text: "How well are data analytics utilized in security planning?",
-        section: "technology",
-      },
-      {
-        id: "technology-8",
-        text: "How accessible are emergency communication systems to the public?",
-        section: "technology",
-      },
-      {
-        id: "technology-9",
-        text: "How effective is the use of social media monitoring for security purposes?",
-        section: "technology",
-      },
-      {
-        id: "technology-10",
-        text: "How well-maintained are the technological security systems?",
-        section: "technology",
+        id: "evaluation-10",
+        text: "Does the LG have a formal system of developing capacity for continuous security improvement?",
+        section: "evaluation",
+        options: [
+          { id: "e10-1", text: "Yes", score: 1 },
+          { id: "e10-2", text: "Unsure", score: 0 },
+          { id: "e10-3", text: "No", score: 0 },
+        ],
       },
     ],
   },
 ]
+
+export const colorCoding = [
+  { min: 80, max: 100, code: "Purple", color: "#8B5CF6", label: "Excellent" },
+  { min: 60, max: 79, code: "Orange", color: "#F97316", label: "Good" },
+  { min: 40, max: 59, code: "Blue", color: "#3B82F6", label: "Satisfactory" },
+  { min: 20, max: 39, code: "Yellow", color: "#EAB308", label: "Poor" },
+  { min: 0, max: 19, code: "Red", color: "#EF4444", label: "Very Poor" },
+]
+
+export function calculateLSAr(sectionScores: Record<string, number>): number {
+  const weights = {
+    "decision-making": 2,
+    instruments: 1,
+    intelligence: 2,
+    resources: 2,
+    institutions: 2,
+    evaluation: 1,
+  }
+
+  let weightedSum = 0
+  Object.entries(sectionScores).forEach(([sectionId, score]) => {
+    const weight = weights[sectionId as keyof typeof weights] || 1
+    weightedSum += score * weight
+  })
+
+  return weightedSum / 10
+}
+
+export function getColorCoding(lsarScore: number) {
+  return colorCoding.find((coding) => lsarScore >= coding.min && lsarScore <= coding.max) || colorCoding[4]
+}

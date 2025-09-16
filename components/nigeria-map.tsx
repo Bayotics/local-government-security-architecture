@@ -5,14 +5,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { calculateLSAr, getColorCoding } from "@/lib/survey-data"
 
 // Define types for our data
-interface LGAScore {    
+interface LGAScore {
   state: string
   lga: string
   count: number
   averageScores: {
     [key: string]: number
+  }
+  lsarScore?: number
+  colorCoding?: {
+    code: string
+    color: string
+    label: string
   }
 }
 
@@ -72,33 +79,11 @@ const getBorderingLGAs = (state: string, lga: string, allLGAs: LGAScore[]): stri
   return getFallbackBorderingLGAs(state, lga, allLGAs)
 }
 
-// Calculate the overall average score for an LGA
-const calculateOverallScore = (scores: { [key: string]: number }): number => {
-  const values = Object.values(scores)
-  if (values.length === 0) return 0
-
-  const sum = values.reduce((acc, val) => acc + val, 0)
-  return Number.parseFloat((sum / values.length).toFixed(1))
-}
-
-// Get color based on score
-const getScoreColor = (score: number): string => {
-  if (score >= 9) return "bg-blue-500"
-  if (score >= 8) return "bg-purple-500"
-  if (score >= 7) return "bg-green-500"
-  if (score >= 6) return "bg-yellow-500"
-  if (score >= 5) return "bg-orange-500"
-  if (score >= 4) return "bg-red-500"
-  if (score >= 3) return "bg-red-700"
-  if (score >= 2) return "bg-gray-700"
-  return "bg-gray-900"
-}
-
 export function NigeriaMap({ selectedState, selectedLga }: NigeriaMapProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lgaScores, setLgaScores] = useState<LGAScore[]>([])
-  const [relevantLGAs, setRelevantLGAs] = useState<{ lga: string; score: number; color: string }[]>([])
+  const [relevantLGAs, setRelevantLGAs] = useState<{ lga: string; lsarScore: number; colorCoding: any }[]>([])
 
   // Fetch LGA scores
   useEffect(() => {
@@ -116,31 +101,33 @@ export function NigeriaMap({ selectedState, selectedLga }: NigeriaMapProps) {
         const data = await response.json()
         setLgaScores(data)
 
-        // Process the data to get relevant LGAs and their scores
+        // Process the data to get relevant LGAs and their LSAr scores
         const borderLGAs = getBorderingLGAs(selectedState, selectedLga, data)
 
         // Get the selected LGA and its bordering LGAs with their scores
         const relevantLGAData = data
           .filter(
-            (item) =>
+            (item: LGAScore) =>
               (item.lga === selectedLga && item.state === selectedState) ||
               (borderLGAs.includes(item.lga) && item.state === selectedState),
           )
-          .map((item) => {
-            const score = calculateOverallScore(item.averageScores)
+          .map((item: LGAScore) => {
+            const lsarScore = calculateLSAr(item.averageScores)
+            const colorCoding = getColorCoding(lsarScore)
             return {
               lga: item.lga,
-              score,
-              color: getScoreColor(score),
+              lsarScore,
+              colorCoding,
             }
           })
 
         // If the selected LGA is not in the data, add it with a default score
         if (!relevantLGAData.some((item) => item.lga === selectedLga)) {
+          const defaultColorCoding = getColorCoding(0)
           relevantLGAData.push({
             lga: selectedLga,
-            score: 0,
-            color: getScoreColor(0),
+            lsarScore: 0,
+            colorCoding: defaultColorCoding,
           })
         }
 
@@ -162,9 +149,9 @@ export function NigeriaMap({ selectedState, selectedLga }: NigeriaMapProps) {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Security Ratings Map</CardTitle>
+        <CardTitle>Local Security Architecture Ratings</CardTitle>
         <CardDescription>
-          {selectedLga}, {selectedState} and surrounding local governments
+          LSAr scores for {selectedLga}, {selectedState} and surrounding local governments
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -184,13 +171,18 @@ export function NigeriaMap({ selectedState, selectedLga }: NigeriaMapProps) {
             <div className="grid grid-cols-1 gap-4 mb-6">
               {relevantLGAs.map((item) => (
                 <div key={item.lga} className="flex items-center">
-                  <div className={`w-6 h-6 rounded-md mr-3 ${item.color}`}></div>
+                  <div className="w-6 h-6 rounded-md mr-3" style={{ backgroundColor: item.colorCoding.color }}></div>
                   <div className="flex-1">
                     <div className="flex justify-between">
                       <span className="font-medium">
                         {item.lga} {item.lga === selectedLga ? "(Selected)" : ""}
                       </span>
-                      <span>{item.score}/10</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium" style={{ color: item.colorCoding.color }}>
+                          {item.colorCoding.label}
+                        </span>
+                        <span>{item.lsarScore.toFixed(1)}%</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -198,39 +190,39 @@ export function NigeriaMap({ selectedState, selectedLga }: NigeriaMapProps) {
             </div>
 
             <div className="border rounded-lg p-4 bg-slate-50 dark:bg-slate-800">
-              <div className="text-center mb-4 font-medium">Simplified Map Visualization</div>
+              <div className="text-center mb-4 font-medium">LSAr Visualization</div>
               <div className="grid grid-cols-3 gap-2">
                 {relevantLGAs.map((item) => (
                   <div
                     key={item.lga}
-                    className={`${item.color} rounded-lg p-3 text-white text-center ${
+                    className={`rounded-lg p-3 text-white text-center ${
                       item.lga === selectedLga ? "ring-2 ring-offset-2 ring-primary" : ""
                     }`}
+                    style={{ backgroundColor: item.colorCoding.color }}
                   >
                     <div className="text-xs truncate">{item.lga}</div>
-                    <div className="font-bold">{item.score}</div>
+                    <div className="font-bold">{item.lsarScore.toFixed(1)}%</div>
+                    <div className="text-xs">{item.colorCoding.code}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mt-6">
-              <div className="text-sm font-medium mb-2">Color Scale</div>
+              <div className="text-sm font-medium mb-2">LSAr Color Scale</div>
               <div className="flex">
-                <div className="flex-1 h-4 bg-gray-900"></div>
-                <div className="flex-1 h-4 bg-gray-700"></div>
-                <div className="flex-1 h-4 bg-red-700"></div>
-                <div className="flex-1 h-4 bg-red-500"></div>
-                <div className="flex-1 h-4 bg-orange-500"></div>
-                <div className="flex-1 h-4 bg-yellow-500"></div>
-                <div className="flex-1 h-4 bg-green-500"></div>
-                <div className="flex-1 h-4 bg-purple-500"></div>
-                <div className="flex-1 h-4 bg-blue-500"></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#EF4444" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#EAB308" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#3B82F6" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#F97316" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#8B5CF6" }}></div>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>0</span>
-                <span>5</span>
-                <span>10</span>
+                <span>Red (0-20%)</span>
+                <span>Yellow (21-40%)</span>
+                <span>Blue (41-60%)</span>
+                <span>Orange (61-80%)</span>
+                <span>Purple (81-100%)</span>
               </div>
             </div>
           </div>
