@@ -198,14 +198,14 @@ export default function SurveyPage() {
                     >
                       <div className="flex items-center gap-1">
                         <span className="text-xs font-medium truncate">
-                          {section.title.split(" ").slice(0, 2).join(" ")}
+                          {section.tabHeader}
                         </span>
                         {!isAccessible && <Lock className="h-3 w-3" />}
                         {isComplete && <CheckCircle className="h-3 w-3 text-green-500" />}
                       </div>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="text-muted-foreground">{answeredCount}/10</span>
-                        {isComplete && <span className="text-blue-600 font-medium">{sectionScore.toFixed(0)}%</span>}
+                        {isComplete && <span className="text-blue-600 font-medium">{Number(sectionScore.toFixed(0)) * 10}%</span>}
                       </div>
                     </TabsTrigger>
                   )

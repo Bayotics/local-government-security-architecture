@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSurvey } from "@/context/survey-context"
-import { sections } from "@/lib/survey-data"
+import { sections, getScoreFromOptionId } from "@/lib/survey-data"
 import { useRouter } from "next/navigation"
 import { Loader2, Download, BarChart3, FileText, AlertTriangle, RefreshCcw, Save } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -59,18 +59,27 @@ export default function ResultsPage() {
 
       sectionQuestions.forEach((question) => {
         if (answers[question.id] !== undefined) {
-          sectionTotal += answers[question.id]
+          const selectedOptionId = answers[question.id] as string
+          const score = getScoreFromOptionId(selectedOptionId)
+          sectionTotal += score
           answeredCount++
+          console.log(`[v0] Question ${question.id}: ${selectedOptionId} = ${score} points`)
         }
       })
 
-      // Calculate average based on answered questions only
-      const average = answeredCount > 0 ? sectionTotal / answeredCount : 0
-      scores[section.title] = Number.parseFloat(average.toFixed(1))
+      const rawScore = answeredCount > 0 ? sectionTotal : 0
+      const finalScore = rawScore < 0 ? 0 : rawScore
+      // Maximum possible score is the number of questions (each can score max 1 point)
+      const maxPossibleScore = sectionQuestions.length
+      const percentageScore = maxPossibleScore > 0 ? (finalScore / maxPossibleScore) * 100 : 0
+
+      scores[section.title] = Number.parseFloat(percentageScore.toFixed(1))
+      console.log(`[v0] Section ${section.title}: ${finalScore}/${maxPossibleScore} = ${percentageScore}%`)
     })
 
     setSectionScores(scores)
   }, [answers])
+  console.log(sectionScores)
 
   // Generate analysis
   const generateAnalysis = async () => {
@@ -165,28 +174,23 @@ export default function ResultsPage() {
 
       setDownloadingPdf(true)
 
-      // Import libraries dynamically to avoid SSR issues
       const { jsPDF } = await import("jspdf")
       const autoTable = (await import("jspdf-autotable")).default
 
-      // Create a new PDF document
       const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       })
 
-      // Add title
       doc.setFontSize(20)
       doc.setTextColor(0, 51, 102)
       doc.text(`Security Analysis Report`, 105, 20, { align: "center" })
 
-      // Add subtitle
       doc.setFontSize(16)
       doc.setTextColor(0, 0, 0)
       doc.text(`${selectedLga} Local Government, ${selectedState} State`, 105, 30, { align: "center" })
 
-      // Add date
       doc.setFontSize(10)
       doc.setTextColor(100, 100, 100)
       const date = new Date().toLocaleDateString("en-NG", {
@@ -196,22 +200,18 @@ export default function ResultsPage() {
       })
       doc.text(`Generated on: ${date}`, 105, 38, { align: "center" })
 
-      // Add horizontal line
       doc.setDrawColor(200, 200, 200)
       doc.line(20, 42, 190, 42)
 
-      // Section scores
       doc.setFontSize(14)
       doc.setTextColor(0, 0, 0)
       doc.text("Section Scores", 20, 50)
 
-      // Convert section scores to array for the table
-      const scoresData = Object.entries(sectionScores).map(([title, score]) => [title, `${score}/10`])
+      const scoresData = Object.entries(sectionScores).map(([title, score]) => [title, `${score}%`])
 
-      // Add scores table
       autoTable(doc, {
         startY: 55,
-        head: [["Section", "Score (0-10)"]],
+        head: [["Section", "Score (%)"]],
         body: scoresData,
         headStyles: {
           fillColor: [0, 51, 102],
@@ -223,25 +223,21 @@ export default function ResultsPage() {
         },
       })
 
-      // Add analysis title
       const tableEndY = (doc as any).lastAutoTable.finalY + 10
       doc.setFontSize(14)
       doc.text("Detailed Analysis", 20, tableEndY)
 
-      // Process and add analysis text
       const analysisLines = analysis.split("\n")
       let currentY = tableEndY + 8
       let currentPage = 1
 
       analysisLines.forEach((line) => {
-        // Check if we need a new page
         if (currentY > 270) {
           doc.addPage()
           currentPage++
-          currentY = 20 // Reset Y position for new page
+          currentY = 20
         }
 
-        // Format headings
         if (line.startsWith("# ")) {
           doc.setFontSize(16)
           doc.setTextColor(0, 51, 102)
@@ -258,21 +254,17 @@ export default function ResultsPage() {
           doc.text(line.replace("### ", ""), 20, currentY)
           currentY += 6
         } else if (line.startsWith("- ")) {
-          // Bullet points
           doc.setFontSize(10)
           doc.setTextColor(0, 0, 0)
           doc.text("•", 20, currentY)
           doc.text(line.replace("- ", ""), 25, currentY)
           currentY += 5
         } else if (line.trim() === "") {
-          // Empty line
           currentY += 3
         } else {
-          // Regular text
           doc.setFontSize(10)
           doc.setTextColor(0, 0, 0)
 
-          // Handle long lines by splitting them
           const textLines = doc.splitTextToSize(line, 170)
           textLines.forEach((textLine: string) => {
             doc.text(textLine, 20, currentY)
@@ -281,7 +273,6 @@ export default function ResultsPage() {
         }
       })
 
-      // Add page numbers
       const pageCount = doc.getNumberOfPages()
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i)
@@ -290,7 +281,6 @@ export default function ResultsPage() {
         doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: "center" })
       }
 
-      // Save the PDF
       doc.save(`${selectedLga}_Security_Analysis.pdf`)
     } catch (error) {
       console.error("Error generating PDF:", error)
@@ -354,7 +344,6 @@ export default function ResultsPage() {
                     <div className="prose dark:prose-invert max-w-none">
                       {analysis ? (
                         analysis.split("\n").map((line, index) => {
-                          // Check if line is a heading
                           if (line.startsWith("# ")) {
                             return (
                               <h1 key={index} className="text-2xl font-bold mt-6 mb-4">
@@ -412,10 +401,10 @@ export default function ResultsPage() {
                       <div key={section}>
                         <div className="flex justify-between mb-1">
                           <span className="font-medium">{section}</span>
-                          <span className="font-medium">{score}/10</span>
+                          <span className="font-medium">{score}%</span>
                         </div>
                         <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                          <div className="bg-primary h-2.5 rounded-full" style={{ width: `${score * 10}%` }}></div>
+                          <div className="bg-primary h-2.5 rounded-full" style={{ width: `${score}%` }}></div>
                         </div>
                       </div>
                     ))}
@@ -433,7 +422,6 @@ export default function ResultsPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  // Clear survey data and redirect to location selection
                   localStorage.removeItem("surveyAnswers")
                   localStorage.removeItem("currentSectionIndex")
                   router.push("/select-location")

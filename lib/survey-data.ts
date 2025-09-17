@@ -17,12 +17,14 @@ export interface Section {
   description: string
   questions: Question[]
   weight: number // Weight for final calculation
+  tabHeader: string
 }
 
 export const sections: Section[] = [
   {
     id: "decision-making",
     title: "Local Security Decision Making Authority",
+    tabHeader: "Decision Making",
     description: "Questions regarding local security decision making authority and governance.",
     weight: 2,
     questions: [
@@ -138,6 +140,7 @@ export const sections: Section[] = [
   {
     id: "instruments",
     title: "Development of Local Security Instruments",
+    tabHeader: "Security Instrunments",
     description: "Questions regarding development of local security instruments.",
     weight: 1,
     questions: [
@@ -246,6 +249,7 @@ export const sections: Section[] = [
   {
     id: "intelligence",
     title: "Local Security Intelligence and Early Warning",
+    tabHeader: "Intelligence & Early Warning",
     description: "Questions regarding local security intelligence gathering and early warning.",
     weight: 2,
     questions: [
@@ -357,6 +361,7 @@ export const sections: Section[] = [
     id: "resources",
     title: "Dedicated Resources for Local Security Provision",
     description: "Questions regarding dedicated resources for local security provision.",
+    tabHeader: "Resources",
     weight: 2,
     questions: [
       {
@@ -465,6 +470,7 @@ export const sections: Section[] = [
   {
     id: "institutions",
     title: "Local Security Intervention Institutions and Mechanisms",
+    tabHeader: "Institutions & Mechanisms",
     description: "Questions regarding local security response institutions and mechanisms.",
     weight: 2,
     questions: [
@@ -573,6 +579,7 @@ export const sections: Section[] = [
   {
     id: "evaluation",
     title: "Local Security Performance Measurement and Evaluation",
+    tabHeader: "Performance Evaluation",
     description: "Questions regarding local security performance monitoring, measurement, evaluation and improvement.",
     weight: 1,
     questions: [
