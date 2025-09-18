@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import clientPromise from "@/lib/mongodb"
+import { calculateLSAr, getColorCoding } from "@/lib/survey-data"
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,7 +16,6 @@ export async function GET(req: NextRequest) {
       query = { state }
     }
 
-    // Aggregate scores by local government
     const lgaScores = await db
       .collection("survey_results")
       .aggregate([
@@ -28,12 +28,7 @@ export async function GET(req: NextRequest) {
               state: "$state",
               lga: "$lga",
             },
-            authorityScores: { $push: "$sectionScores.Authority & Governance" },
-            resourcesScores: { $push: "$sectionScores.Resources & Personnel" },
-            fundingScores: { $push: "$sectionScores.Funding & Budget Allocation" },
-            infrastructureScores: { $push: "$sectionScores.Infrastructure & Facilities" },
-            communityScores: { $push: "$sectionScores.Community Engagement" },
-            technologyScores: { $push: "$sectionScores.Technology & Intelligence" },
+            results: { $push: "$$ROOT" },
             count: { $sum: 1 },
           },
         },
@@ -43,14 +38,7 @@ export async function GET(req: NextRequest) {
             lga: "$_id.lga",
             _id: 0,
             count: 1,
-            averageScores: {
-              "Authority & Governance": { $avg: "$authorityScores" },
-              "Resources & Personnel": { $avg: "$resourcesScores" },
-              "Funding & Budget Allocation": { $avg: "$fundingScores" },
-              "Infrastructure & Facilities": { $avg: "$infrastructureScores" },
-              "Community Engagement": { $avg: "$communityScores" },
-              "Technology & Intelligence": { $avg: "$technologyScores" },
-            },
+            results: 1,
           },
         },
         {
@@ -59,7 +47,49 @@ export async function GET(req: NextRequest) {
       ])
       .toArray()
 
-    return NextResponse.json(lgaScores)
+    // Process results to calculate average section scores and LSAr scores
+    const processedScores = lgaScores.map((lgaData: any) => {
+      const { state, lga, count, results } = lgaData
+
+      // Calculate average section scores across all surveys in the LGA
+      const sectionTotals = {
+        "Local Security Decision Making Authority": 0,
+        "Development of Local Security Instruments": 0,
+        "Local Security Intelligence and Early Warning": 0,
+        "Dedicated Resources for Local Security Provision": 0,
+        "Local Security Intervention Institutions and Mechanisms": 0,
+        "Local Security Performance Measurement and Evaluation": 0,
+      }
+
+      results.forEach((result: any) => {
+        if (result.sectionScores) {
+          Object.keys(sectionTotals).forEach((sectionName) => {
+            sectionTotals[sectionName as keyof typeof sectionTotals] += result.sectionScores[sectionName] || 0
+          })
+        }
+      })
+
+      // Calculate averages
+      const averageScores: Record<string, number> = {}
+      Object.keys(sectionTotals).forEach((sectionName) => {
+        averageScores[sectionName] = count > 0 ? sectionTotals[sectionName as keyof typeof sectionTotals] / count : 0
+      })
+
+      // Calculate overall LSAr score
+      const lsarScore = calculateLSAr(averageScores)
+      const colorCoding = getColorCoding(lsarScore)
+
+      return {
+        state,
+        lga,
+        count,
+        averageScores,
+        lsarScore,
+        colorCoding,
+      }
+    })
+
+    return NextResponse.json(processedScores)
   } catch (error: any) {
     console.error("Error fetching LGA scores:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

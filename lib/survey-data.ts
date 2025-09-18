@@ -17,14 +17,12 @@ export interface Section {
   description: string
   questions: Question[]
   weight: number // Weight for final calculation
-  tabHeader: string
 }
 
 export const sections: Section[] = [
   {
     id: "decision-making",
     title: "Local Security Decision Making Authority",
-    tabHeader: "Decision Making",
     description: "Questions regarding local security decision making authority and governance.",
     weight: 2,
     questions: [
@@ -140,7 +138,6 @@ export const sections: Section[] = [
   {
     id: "instruments",
     title: "Development of Local Security Instruments",
-    tabHeader: "Security Instrunments",
     description: "Questions regarding development of local security instruments.",
     weight: 1,
     questions: [
@@ -249,7 +246,6 @@ export const sections: Section[] = [
   {
     id: "intelligence",
     title: "Local Security Intelligence and Early Warning",
-    tabHeader: "Intelligence & Early Warning",
     description: "Questions regarding local security intelligence gathering and early warning.",
     weight: 2,
     questions: [
@@ -361,7 +357,6 @@ export const sections: Section[] = [
     id: "resources",
     title: "Dedicated Resources for Local Security Provision",
     description: "Questions regarding dedicated resources for local security provision.",
-    tabHeader: "Resources",
     weight: 2,
     questions: [
       {
@@ -470,7 +465,6 @@ export const sections: Section[] = [
   {
     id: "institutions",
     title: "Local Security Intervention Institutions and Mechanisms",
-    tabHeader: "Institutions & Mechanisms",
     description: "Questions regarding local security response institutions and mechanisms.",
     weight: 2,
     questions: [
@@ -579,7 +573,6 @@ export const sections: Section[] = [
   {
     id: "evaluation",
     title: "Local Security Performance Measurement and Evaluation",
-    tabHeader: "Performance Evaluation",
     description: "Questions regarding local security performance monitoring, measurement, evaluation and improvement.",
     weight: 1,
     questions: [
@@ -716,4 +709,30 @@ export function calculateLSAr(sectionScores: Record<string, number>): number {
 
 export function getColorCoding(lsarScore: number) {
   return colorCoding.find((coding) => lsarScore >= coding.min && lsarScore <= coding.max) || colorCoding[4]
+}
+
+export function getScoreFromOptionId(optionId: string): number {
+  for (const section of sections) {
+    for (const question of section.questions) {
+      const option = question.options.find((opt) => opt.id === optionId)
+      if (option) {
+        return option.score
+      }
+    }
+  }
+  return 0 // Default to 0 if option not found
+}
+
+export function getQuestionById(questionId: string): Question | undefined {
+  for (const section of sections) {
+    const question = section.questions.find((q) => q.id === questionId)
+    if (question) {
+      return question
+    }
+  }
+  return undefined
+}
+
+export function getSectionById(sectionId: string): Section | undefined {
+  return sections.find((section) => section.id === sectionId)
 }

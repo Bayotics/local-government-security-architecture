@@ -205,7 +205,7 @@ export default function SurveyPage() {
                       </div>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="text-muted-foreground">{answeredCount}/10</span>
-                        {isComplete && <span className="text-blue-600 font-medium">{Number(sectionScore.toFixed(0)) * 10}%</span>}
+                        {/* {isComplete && <span className="text-blue-600 font-medium">{Number(sectionScore.toFixed(0)) * 10}%</span>} */}
                       </div>
                     </TabsTrigger>
                   )

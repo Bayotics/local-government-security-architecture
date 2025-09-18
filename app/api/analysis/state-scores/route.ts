@@ -37,26 +37,26 @@ export async function GET(req: NextRequest) {
 
       // Calculate average section scores across all LGAs in the state
       const sectionTotals = {
-        "decision-making": 0,
-        instruments: 0,
-        intelligence: 0,
-        resources: 0,
-        institutions: 0,
-        evaluation: 0,
+        "Local Security Decision Making Authority": 0,
+        "Development of Local Security Instruments": 0,
+        "Local Security Intelligence and Early Warning": 0,
+        "Dedicated Resources for Local Security Provision": 0,
+        "Local Security Intervention Institutions and Mechanisms": 0,
+        "Local Security Performance Measurement and Evaluation": 0,
       }
 
       results.forEach((result: any) => {
         if (result.sectionScores) {
-          Object.keys(sectionTotals).forEach((sectionId) => {
-            sectionTotals[sectionId as keyof typeof sectionTotals] += result.sectionScores[sectionId] || 0
+          Object.keys(sectionTotals).forEach((sectionName) => {
+            sectionTotals[sectionName as keyof typeof sectionTotals] += result.sectionScores[sectionName] || 0
           })
         }
       })
 
       // Calculate averages
       const averageScores: Record<string, number> = {}
-      Object.keys(sectionTotals).forEach((sectionId) => {
-        averageScores[sectionId] = count > 0 ? sectionTotals[sectionId as keyof typeof sectionTotals] / count : 0
+      Object.keys(sectionTotals).forEach((sectionName) => {
+        averageScores[sectionName] = count > 0 ? sectionTotals[sectionName as keyof typeof sectionTotals] / count : 0
       })
 
       // Calculate overall LSAr score
