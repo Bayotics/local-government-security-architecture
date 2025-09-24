@@ -112,11 +112,22 @@ export default function ResultsPage() {
 
   useEffect(() => {
     const getNeighboringLGAs = async () => {
-      if (!selectedLga) return
+      if (!selectedLga || !selectedState || features.length === 0) {
+        console.log("[v0] Missing required data for neighboring LGAs:", {
+          selectedLga: !!selectedLga,
+          selectedState: !!selectedState,
+          featuresLength: features.length,
+        })
+        setNeighboringLGAs([])
+        return
+      }
+
+      console.log("[v0] Calculating neighboring LGAs for:", selectedLga)
 
       const selectedFeature = features.find((f) => f.properties.shapeName === selectedLga)
       if (!selectedFeature) {
         console.log("[v0] Selected feature not found for:", selectedLga)
+        setNeighboringLGAs([])
         return
       }
 
@@ -167,11 +178,14 @@ export default function ResultsPage() {
         }
       } catch (error) {
         console.error("Error fetching neighboring LGA scores:", error)
+        setNeighboringLGAs([])
       }
     }
 
-    if (selectedLga && selectedState) {
+    if (selectedLga && selectedState && features.length > 0) {
       getNeighboringLGAs()
+    } else {
+      setNeighboringLGAs([])
     }
   }, [selectedLga, selectedState])
 

@@ -94,7 +94,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-7",
-        text: "Is LGA Chairman responsible for security decision making in LGA?",
+        text: "Is LGA Chairman solely responsible for security decision making in LGA?",
         section: "decision-making",
         options: [
           { id: "d7-1", text: "Yes", score: 1 },

@@ -6,16 +6,13 @@ import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { nigerianLGAs } from "@/lib/nigeria-data"
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { features } from "@/lgaShapes";
+import { MapContainer, GeoJSON } from "react-leaflet"
+import { features } from "@/lgaShapes"
 import { useMap } from "react-leaflet"
 import { useMemo } from "react"
-import L from "leaflet";
+import L from "leaflet"
 import booleanIntersects from "@turf/boolean-intersects"
-import { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
-
-
-
+import type { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
 
 // Define types for our data
 interface LGAScore {
@@ -58,11 +55,11 @@ const getScoreColor = (score: number): string => {
 }
 
 function getCentroid(coords: any[]): [number, number] {
-  const flat = coords.flat(Infinity).filter((c: any) => Array.isArray(c) && c.length === 2)
+  const flat = coords.flat(Number.POSITIVE_INFINITY).filter((c: any) => Array.isArray(c) && c.length === 2)
 
   const sum = flat.reduce(
     (acc: [number, number], coord: [number, number]) => [acc[0] + coord[0], acc[1] + coord[1]],
-    [0, 0]
+    [0, 0],
   )
 
   return [sum[0] / flat.length, sum[1] / flat.length]
@@ -78,9 +75,7 @@ function haversineDistance(coord1: [number, number], coord2: [number, number]): 
   const dLat = toRad(lat2 - lat1)
   const dLon = toRad(lon2 - lon1)
 
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
@@ -110,96 +105,108 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
 
   // Process LGA data when scores or selected LGA changes
   useEffect(() => {
-    if (selectedLga && lgaScores.length > 0) {
-  const selectedFeature = features.find(f => f.properties.shapeName === selectedLga)
+    if (selectedLga && lgaScores.length > 0 && features.length > 0) {
+      console.log("[v0] Calculating border LGAs for:", selectedLga)
 
-  if (selectedFeature) {
-    const neighbors: string[] = []
+      const selectedFeature = features.find((f) => f.properties.shapeName === selectedLga)
 
-    for (const feature of features) {
-      const name = feature.properties.shapeName
+      if (selectedFeature) {
+        const neighbors: string[] = []
 
-      if (name === selectedLga) continue
+        for (const feature of features) {
+          const name = feature.properties.shapeName
 
-      const isAdjacent = booleanIntersects(
-        selectedFeature as TurfFeature<Polygon | MultiPolygon>,
-        feature as TurfFeature<Polygon | MultiPolygon>
-      )
+          if (name === selectedLga) continue
 
-      if (isAdjacent) {
-        neighbors.push(name)
+          try {
+            const isAdjacent = booleanIntersects(
+              selectedFeature as TurfFeature<Polygon | MultiPolygon>,
+              feature as TurfFeature<Polygon | MultiPolygon>,
+            )
+
+            if (isAdjacent) {
+              neighbors.push(name)
+            }
+          } catch (error) {
+            console.error(`[v0] Error checking intersection for ${name}:`, error)
+          }
+        }
+
+        console.log("[v0] Found border LGAs:", neighbors)
+        setBorderLGAs(neighbors)
+      } else {
+        console.log("[v0] Selected feature not found, clearing border LGAs")
+        setBorderLGAs([])
       }
-    }
 
-    setBorderLGAs(neighbors)
-  }
+      // Build score/color map (unchanged)
+      const newLgaData = new Map<string, { score: number; color: string; hasSurvey: boolean }>()
 
-  // Build score/color map (unchanged)
-  const newLgaData = new Map<string, { score: number; color: string; hasSurvey: boolean }>()
+      lgasInState.forEach((lga) => {
+        const lgaScoreData = lgaScores.find((item) => item.lga === lga && item.state === selectedState)
 
-  lgasInState.forEach((lga) => {
-    const lgaScoreData = lgaScores.find((item) => item.lga === lga && item.state === selectedState)
-
-    if (lgaScoreData) {
-      const score = calculateOverallScore(lgaScoreData.averageScores)
-      newLgaData.set(lga, {
-        score,
-        color: getScoreColor(score),
-        hasSurvey: true,
+        if (lgaScoreData) {
+          const score = calculateOverallScore(lgaScoreData.averageScores)
+          newLgaData.set(lga, {
+            score,
+            color: getScoreColor(score),
+            hasSurvey: true,
+          })
+        } else {
+          newLgaData.set(lga, {
+            score: 0,
+            color: "#e2e8f0",
+            hasSurvey: false,
+          })
+        }
       })
+
+      setLgaData(newLgaData)
     } else {
-      newLgaData.set(lga, {
-        score: 0,
-        color: "#e2e8f0",
-        hasSurvey: false,
+      console.log("[v0] Conditions not met for border LGA calculation:", {
+        selectedLga: !!selectedLga,
+        lgaScoresLength: lgaScores.length,
+        featuresLength: features.length,
       })
+      setBorderLGAs([])
     }
-  })
-
-  setLgaData(newLgaData)
-}
-
   }, [selectedLga, lgaScores, lgasInState, selectedState])
 
   // Zoom on select function
   function ZoomToLGAs({ selected, borders }: { selected: string; borders: string[] }) {
-  const map = useMap()
+    const map = useMap()
 
-  const bounds = useMemo(() => {
-    const selectedFeatures = features.filter(
-      (feature) =>
-        feature.properties.shapeName === selected || borders.includes(feature.properties.shapeName)
-    )
+    const bounds = useMemo(() => {
+      const selectedFeatures = features.filter(
+        (feature) => feature.properties.shapeName === selected || borders.includes(feature.properties.shapeName),
+      )
 
-    const allCoords: [number, number][] = []
+      const allCoords: [number, number][] = []
 
-    selectedFeatures.forEach((feature) => {
-      const coords = feature.geometry.coordinates
+      selectedFeatures.forEach((feature) => {
+        const coords = feature.geometry.coordinates
 
-      // Flatten coordinates for both single and multi polygons
-      const flatCoords = feature.geometry.type === "Polygon"
-        ? coords[0]
-        : coords.flat(2)
+        // Flatten coordinates for both single and multi polygons
+        const flatCoords = feature.geometry.type === "Polygon" ? coords[0] : coords.flat(2)
 
-      flatCoords.forEach((coord: number[]) => {
-        if (Array.isArray(coord) && coord.length === 2) {
-          allCoords.push([coord[1], coord[0]]) // lat, lng
-        }
+        flatCoords.forEach((coord: number[]) => {
+          if (Array.isArray(coord) && coord.length === 2) {
+            allCoords.push([coord[1], coord[0]]) // lat, lng
+          }
+        })
       })
-    })
 
-    return L.latLngBounds(allCoords)
-  }, [selected, borders])
+      return L.latLngBounds(allCoords)
+    }, [selected, borders])
 
-  useEffect(() => {
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [80, 80] })
-    }
-  }, [bounds, map])
+    useEffect(() => {
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [80, 80] })
+      }
+    }, [bounds, map])
 
-  return null
-}
-
+    return null
+  }
 
   return (
     <Card className="mt-6">
@@ -318,58 +325,59 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
               {/* GeoJSON Map */}
               <div className="mt-6">
                 <div className="text-sm font-medium mb-2">Map View</div>
-                  <MapContainer
-                    center={[9.082, 8.6753]} // Nigeria center
-                    zoom={6}
-                    scrollWheelZoom={false}
-                    style={{ height: "500px", width: "100%" }}
-                  >
-                    {/* attribution='&copy; <a href="https://carto.com/">Carto</a>'
-                      url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" */}
-                    {/* <TileLayer
-                      attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    /> */}
-                    <ZoomToLGAs selected={selectedLga} borders={borderLGAs} />
-                    {features
-                      .filter(
-                        (feature) =>
-                          feature.properties.shapeName === selectedLga || borderLGAs.includes(feature.properties.shapeName)
+                <MapContainer
+                  center={[9.082, 8.6753]} // Nigeria center
+                  zoom={6}
+                  scrollWheelZoom={false}
+                  style={{ height: "500px", width: "100%" }}
+                >
+                  {/* attribution='&copy; <a href="https://carto.com/">Carto</a>'
+                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" */}
+                  {/* <TileLayer
+                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  /> */}
+                  <ZoomToLGAs selected={selectedLga} borders={borderLGAs} />
+                  {features
+                    .filter(
+                      (feature) =>
+                        feature.properties.shapeName === selectedLga ||
+                        borderLGAs.includes(feature.properties.shapeName),
+                    )
+                    .map((feature, index) => {
+                      const lgaName = feature.properties.shapeName
+                      const isSelected = lgaName === selectedLga
+                      const data = lgaData.get(lgaName)
+
+                      // Decide color
+                      let color = "#10b981" // Default for neighbors with no data
+                      if (isSelected) {
+                        color = "#1d4ed8"
+                      } else if (data?.hasSurvey) {
+                        color = getScoreColor(data.score)
+                      }
+
+                      // Popup label
+                      const popupLabel = data?.hasSurvey
+                        ? `${lgaName} - Rating: ${data.score}/10`
+                        : `${lgaName} - No data`
+
+                      return (
+                        <GeoJSON
+                          key={index}
+                          data={feature as any}
+                          style={{
+                            color,
+                            weight: isSelected ? 3 : 1,
+                            fillOpacity: 0.5,
+                          }}
+                          onEachFeature={(f, layer) => {
+                            layer.bindPopup(popupLabel)
+                          }}
+                        />
                       )
-                      .map((feature, index) => {
-                        const lgaName = feature.properties.shapeName
-                        const isSelected = lgaName === selectedLga
-                        const data = lgaData.get(lgaName)
-
-                        // Decide color
-                        let color = "#10b981" // Default for neighbors with no data
-                        if (isSelected) {
-                          color = "#1d4ed8"
-                        } else if (data?.hasSurvey) {
-                          color = getScoreColor(data.score)
-                        }
-
-                        // Popup label
-                        const popupLabel = data?.hasSurvey
-                          ? `${lgaName} - Rating: ${data.score}/10`
-                          : `${lgaName} - No data`
-
-                        return (
-                          <GeoJSON
-                            key={index}
-                            data={feature as any}
-                            style={{
-                              color,
-                              weight: isSelected ? 3 : 1,
-                              fillOpacity: 0.5,
-                            }}
-                            onEachFeature={(f, layer) => {
-                              layer.bindPopup(popupLabel)
-                            }}
-                          />
-                        )
-                      })}
-                  </MapContainer>
+                    })}
+                </MapContainer>
               </div>
             </div>
           </div>
