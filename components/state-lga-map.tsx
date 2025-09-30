@@ -13,6 +13,7 @@ import { useMemo } from "react"
 import L from "leaflet"
 import booleanIntersects from "@turf/boolean-intersects"
 import type { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
+import { Button } from "@/components/ui/button"
 
 // Define types for our data
 interface LGAScore {
@@ -30,6 +31,7 @@ interface StateLGAMapProps {
   lgaScores: LGAScore[]
   loading: boolean
   error: string | null
+  onContinue?: () => void // Added onContinue prop for the continue button
 }
 
 // Calculate the overall average score for an LGA
@@ -43,15 +45,11 @@ const calculateOverallScore = (scores: { [key: string]: number }): number => {
 
 // Get color based on score
 const getScoreColor = (score: number): string => {
-  if (score >= 9) return "#3b82f6" // blue-500
-  if (score >= 8) return "#8b5cf6" // purple-500
-  if (score >= 7) return "#22c55e" // green-500
-  if (score >= 6) return "#eab308" // yellow-500
-  if (score >= 5) return "#f97316" // orange-500
-  if (score >= 4) return "#ef4444" // red-500
-  if (score >= 3) return "#b91c1c" // red-700
-  if (score >= 2) return "#374151" // gray-700
-  return "#111827" // gray-900
+  if (score >= 80) return "#8b5cf6" // Purple - Excellent
+  if (score >= 60) return "#f37209" // Orange - Good
+  if (score >= 40) return "#2323dd" // blue - Satisfactory
+  if (score >= 20) return "#f3f728" // Yellow - poor
+  return "#e70909" // red
 }
 
 function getCentroid(coords: any[]): [number, number] {
@@ -82,7 +80,7 @@ function haversineDistance(coord1: [number, number], coord2: [number, number]): 
   return R * c
 }
 
-export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, error }: StateLGAMapProps) {
+export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, error, onContinue }: StateLGAMapProps) {
   const [lgasInState, setLgasInState] = useState<string[]>([])
   const [borderLGAs, setBorderLGAs] = useState<string[]>([])
   const [lgaData, setLgaData] = useState<Map<string, { score: number; color: string; hasSurvey: boolean }>>(new Map())
@@ -255,7 +253,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                       </div>
                       {data?.hasSurvey && (
                         <div className={`font-bold ${data?.hasSurvey ? "text-white" : "text-gray-700"}`}>
-                          {data.score}
+                          {data.score}%
                         </div>
                       )}
                     </div>
@@ -268,20 +266,16 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
             <div>
               <div className="text-sm font-medium mb-2">Security Rating Scale</div>
               <div className="flex">
-                <div className="flex-1 h-4" style={{ backgroundColor: "#111827" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#374151" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#b91c1c" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#ef4444" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#f97316" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#eab308" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#22c55e" }}></div>
+                <div className="flex-1 h-4" style= {{ backgroundColor: "#e70909" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#f3f728" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#2323dd" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#f37209" }}></div>
                 <div className="flex-1 h-4" style={{ backgroundColor: "#8b5cf6" }}></div>
-                <div className="flex-1 h-4" style={{ backgroundColor: "#3b82f6" }}></div>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>0</span>
-                <span>5</span>
-                <span>10</span>
+                <span>50</span>
+                <span>100</span>
               </div>
             </div>
 
@@ -301,7 +295,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                   ></div>
                   <span className="flex-1 truncate">{selectedLga} (Selected)</span>
                   <span>
-                    {lgaData.get(selectedLga)?.hasSurvey ? `${lgaData.get(selectedLga)?.score}/10` : "No data"}
+                    {lgaData.get(selectedLga)?.hasSurvey ? `${lgaData.get(selectedLga)?.score}/100` : "No data"}
                   </span>
                 </div>
 
@@ -315,7 +309,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                         style={{ backgroundColor: data?.hasSurvey ? data.color : "#e2e8f0" }}
                       ></div>
                       <span className="flex-1 truncate">{lga}</span>
-                      <span>{data?.hasSurvey ? `${data.score}/10` : "No data"}</span>
+                      <span>{data?.hasSurvey ? `${data.score}/100` : "No data"}</span>
                     </div>
                   )
                 })}
@@ -380,6 +374,14 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                 </MapContainer>
               </div>
             </div>
+          </div>
+        )}
+
+        {onContinue && !loading && !error && (
+          <div className="mt-6 pt-4 border-t">
+            <Button onClick={onContinue} className="w-full" disabled={!selectedState || !selectedLga}>
+              Continue to Survey
+            </Button>
           </div>
         )}
       </CardContent>

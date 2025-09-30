@@ -79,9 +79,8 @@ export async function POST(req: NextRequest) {
       1. A summary of the local security architecture status in ${lga} Local Government
       2. Key strengths identified from the assessment (areas with scores above 60%)
       3. Critical deficits and vulnerabilities in each dimension (areas with scores below 40%)
-      4. Specific, actionable recommendations to improve local security architecture in ${lga}
-      5. Priority areas that need immediate attention (lowest scoring dimensions)
-      
+      4. Priority areas that need immediate attention (lowest scoring dimensions)
+      5. Specific, actionable recommendations to improve local security architecture in ${lga}
       
       Note that the scoring is based on LSAr methodology where scores represent percentage of optimal local security architecture
       Avoid Usage of **, ### and so on for font stylings or line breaks like /n so texts can be parsed easily from your response

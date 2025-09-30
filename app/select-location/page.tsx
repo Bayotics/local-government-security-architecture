@@ -1,18 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
-import { Loader2, AlertCircle } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Navbar } from "@/components/navbar"
-import { NigeriaStatesMap } from "@/components/nigeria-states-map"
 import { StateLGAMap } from "@/components/state-lga-map"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface State {
   id: number
@@ -47,7 +43,6 @@ export default function SelectLocation() {
   const [lgaScores, setLgaScores] = useState<LGAScore[]>([])
   const [loadingScores, setLoadingScores] = useState(false)
   const [scoreError, setScoreError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState("state")
 
   // Check authentication
   useEffect(() => {
@@ -61,41 +56,11 @@ export default function SelectLocation() {
     const fetchStatesAndLgas = async () => {
       try {
         setLoading(true)
-
-        // Try to fetch from API first
         try {
-          // Fetch states
-          const statesResponse = await fetch("https://nga-states-lga.onrender.com/fetch", {
-            signal: AbortSignal.timeout(5000), // 5 second timeout
-          })
-
-          if (statesResponse.ok) {
-            const statesData = await statesResponse.json()
-            setStates(statesData)
-          } else {
-            // Fallback to static data
-            setStates(nigerianStates)
-            console.log("Using fallback state data")
-          }
-
-          // Fetch LGAs
-          const lgasResponse = await fetch("https://nigeria-states-and-lga.onrender.com/api/lgas", {
-            signal: AbortSignal.timeout(5000), // 5 second timeout
-          })
-
-          if (lgasResponse.ok) {
-            const lgasData = await lgasResponse.json()
-            setLgas(lgasData)
-          } else {
-            // Fallback to static data
-            setLgas(nigerianLGAs)
-            console.log("Using fallback LGA data")
-          }
-        } catch (error) {
-          // API fetch failed, use fallback data
-          console.log("API fetch failed, using fallback data")
           setStates(nigerianStates)
           setLgas(nigerianLGAs)
+        } catch (error) {
+          console.log("API fetch failed, using fallback data")
           setUsingFallbackData(true)
         }
       } catch (error) {
@@ -181,9 +146,7 @@ export default function SelectLocation() {
                 </div>
               ) : (
                 <>
-                  {usingFallbackData && (
-                    <div></div>
-                  )}
+                  {usingFallbackData && <div></div>}
                   <div className="grid gap-6">
                     <div className="grid gap-2">
                       <Label htmlFor="state">State</Label>
@@ -231,24 +194,20 @@ export default function SelectLocation() {
                 </>
               )}
             </CardContent>
-            <CardFooter>
-              <Button onClick={handleContinue} className="w-full" disabled={!selectedState || !selectedLga}>
-                Continue to Survey
-              </Button>
-            </CardFooter>
           </Card>
 
           {showMap && (
             <div>
               <StateLGAMap
-                  selectedState={selectedState}
-                  selectedLga={selectedLga}
-                  lgaScores={lgaScores}
-                  loading={loadingScores}
-                  error={scoreError}
-                />
+                selectedState={selectedState}
+                selectedLga={selectedLga}
+                lgaScores={lgaScores}
+                loading={loadingScores}
+                error={scoreError}
+                onContinue={handleContinue}
+              />
             </div>
-            
+
             // <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             //   <TabsList className="grid grid-cols-2 mb-4">
             //     <TabsTrigger value="lga">State View</TabsTrigger>
