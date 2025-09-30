@@ -15,6 +15,9 @@ import booleanIntersects from "@turf/boolean-intersects"
 import type { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
 import { jsPDF } from "jspdf"
 import autoTable from "jspdf-autotable"
+import type { SurveyResult } from "@/lib/models"
+import { compareSurveys, type OverallComparison } from "@/lib/comparison-utils"
+import { SurveyComparison } from "@/components/survey-comparison"
 
 interface NeighboringLGAData {
   lga: string
@@ -48,6 +51,9 @@ export default function ResultsPage() {
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [neighboringLGAs, setNeighboringLGAs] = useState<NeighboringLGAData[]>([])
   const [overallLSAr, setOverallLSAr] = useState<number>(0)
+  const [previousSurvey, setPreviousSurvey] = useState<SurveyResult | null>(null)
+  const [comparison, setComparison] = useState<OverallComparison | null>(null)
+  const [loadingPreviousSurvey, setLoadingPreviousSurvey] = useState(false)
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
@@ -240,7 +246,7 @@ export default function ResultsPage() {
     if (selectedState && selectedLga && Object.keys(answers).length > 0 && Object.keys(sectionScores).length > 0) {
       generateAnalysis()
     }
-  }, [sectionScores]) // Now depends on sectionScores being populated
+  }, [sectionScores])
 
   const saveToDatabase = async () => {
     try {
@@ -337,7 +343,144 @@ export default function ResultsPage() {
       doc.text(`Score: ${overallLSAr}% - ${lsarRating}`, 20, currentY)
       currentY += 10
 
+      if (comparison && previousSurvey) {
+        if (currentY > 250) {
+          doc.addPage()
+          currentY = 20
+        }
+
+        doc.setFontSize(14)
+        doc.setTextColor(0, 51, 102)
+        doc.text("Survey Comparison", 20, currentY)
+        currentY += 5
+
+        doc.setFontSize(10)
+        doc.setTextColor(100, 100, 100)
+        const previousDate = new Date(previousSurvey.date).toLocaleDateString("en-NG", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+        doc.text(`Comparison with survey conducted on: ${previousDate}`, 20, currentY)
+        currentY += 8
+
+        doc.setFontSize(12)
+        doc.setTextColor(0, 0, 0)
+        doc.text("Overall Performance", 20, currentY)
+        currentY += 6
+
+        const overallComparisonData = [
+          ["Previous LSAr Score", `${comparison.previousLSAr.toFixed(1)}%`],
+          ["Current LSAr Score", `${comparison.currentLSAr.toFixed(1)}%`],
+          [
+            "Change",
+            `${comparison.change > 0 ? "+" : ""}${comparison.change.toFixed(1)}% (${comparison.status.toUpperCase()})`,
+          ],
+        ]
+
+        autoTable(doc, {
+          startY: currentY,
+          body: overallComparisonData,
+          theme: "plain",
+          styles: {
+            fontSize: 10,
+            cellPadding: 2,
+          },
+        })
+
+        currentY = (doc as any).lastAutoTable.finalY + 5
+
+        doc.setFontSize(10)
+        const remarkLines = doc.splitTextToSize(comparison.remark, 170)
+        remarkLines.forEach((line: string) => {
+          if (currentY > 270) {
+            doc.addPage()
+            currentY = 20
+          }
+          doc.text(line, 20, currentY)
+          currentY += 5
+        })
+
+        currentY += 5
+
+        if (currentY > 250) {
+          doc.addPage()
+          currentY = 20
+        }
+
+        doc.setFontSize(12)
+        doc.setTextColor(0, 0, 0)
+        doc.text("Section-by-Section Analysis", 20, currentY)
+        currentY += 5
+
+        const sectionComparisonData = comparison.sectionComparisons.map((section) => [
+          section.sectionName,
+          `${section.previousScore.toFixed(1)}%`,
+          `${section.currentScore.toFixed(1)}%`,
+          `${section.change > 0 ? "+" : ""}${section.change.toFixed(1)}%`,
+          section.status.toUpperCase(),
+        ])
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [["Section", "Previous", "Current", "Change", "Status"]],
+          body: sectionComparisonData,
+          headStyles: {
+            fillColor: [0, 51, 102],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+            fontSize: 9,
+          },
+          styles: {
+            fontSize: 8,
+            cellPadding: 2,
+          },
+          alternateRowStyles: {
+            fillColor: [240, 240, 240],
+          },
+        })
+
+        currentY = (doc as any).lastAutoTable.finalY + 8
+
+        doc.setFontSize(11)
+        doc.text("Detailed Section Remarks", 20, currentY)
+        currentY += 6
+
+        comparison.sectionComparisons.forEach((section) => {
+          if (currentY > 260) {
+            doc.addPage()
+            currentY = 20
+          }
+
+          doc.setFontSize(10)
+          doc.setFont(undefined, "bold")
+          doc.text(section.sectionName, 20, currentY)
+          currentY += 5
+
+          doc.setFont(undefined, "normal")
+          doc.setFontSize(9)
+          const sectionRemarkLines = doc.splitTextToSize(section.remark, 170)
+          sectionRemarkLines.forEach((line: string) => {
+            if (currentY > 270) {
+              doc.addPage()
+              currentY = 20
+            }
+            doc.text(line, 20, currentY)
+            currentY += 4
+          })
+
+          currentY += 3
+        })
+
+        currentY += 5
+      }
+
       if (neighboringLGAs.length > 0) {
+        if (currentY > 250) {
+          doc.addPage()
+          currentY = 20
+        }
+
         doc.setFontSize(14)
         doc.text("Neighboring LGAs Comparison", 20, currentY)
         currentY += 5
@@ -363,6 +506,11 @@ export default function ResultsPage() {
         })
 
         currentY = (doc as any).lastAutoTable.finalY + 10
+      }
+
+      if (currentY > 250) {
+        doc.addPage()
+        currentY = 20
       }
 
       doc.setFontSize(14)
@@ -406,6 +554,10 @@ export default function ResultsPage() {
 
           const textLines = doc.splitTextToSize(line, 170)
           textLines.forEach((textLine: string) => {
+            if (currentY > 270) {
+              doc.addPage()
+              currentY = 20
+            }
             doc.text(textLine, 20, currentY)
             currentY += 5
           })
@@ -428,6 +580,61 @@ export default function ResultsPage() {
       setDownloadingPdf(false)
     }
   }
+
+  useEffect(() => {
+    const fetchPreviousSurvey = async () => {
+      if (!selectedState || !selectedLga) return
+
+      try {
+        setLoadingPreviousSurvey(true)
+        const response = await fetch(`/api/survey-results?state=${selectedState}&lga=${selectedLga}`)
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch previous surveys")
+        }
+
+        const data: SurveyResult[] = await response.json()
+
+        if (data && data.length > 0) {
+          // Sort by date and get the most recent
+          const sortedSurveys = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          setPreviousSurvey(sortedSurveys[0])
+        } else {
+          setPreviousSurvey(null)
+        }
+      } catch (error: any) {
+        console.error("Error fetching previous survey:", error)
+        setPreviousSurvey(null)
+      } finally {
+        setLoadingPreviousSurvey(false)
+      }
+    }
+
+    fetchPreviousSurvey()
+  }, [selectedState, selectedLga])
+
+  useEffect(() => {
+    if (previousSurvey && Object.keys(sectionScores).length > 0 && overallLSAr > 0) {
+      const currentSurvey: SurveyResult = {
+        state: selectedState || "",
+        lga: selectedLga || "",
+        date: new Date(),
+        sectionScores,
+        answers,
+        lsarScore: overallLSAr,
+        colorCoding: {
+          code: "",
+          color: "",
+          label: "",
+        },
+      }
+
+      const comparisonResult = compareSurveys(previousSurvey, currentSurvey)
+      setComparison(comparisonResult)
+    } else {
+      setComparison(null)
+    }
+  }, [previousSurvey, sectionScores, overallLSAr, selectedState, selectedLga, answers])
 
   return (
     <>
@@ -488,6 +695,10 @@ export default function ResultsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {!loadingPreviousSurvey && comparison && previousSurvey && (
+              <SurveyComparison comparison={comparison} previousSurveyDate={previousSurvey.date} />
+            )}
 
             {neighboringLGAs.length > 0 && (
               <Card>

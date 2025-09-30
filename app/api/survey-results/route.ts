@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import clientPromise from "@/lib/mongodb"
 import type { SurveyResult } from "@/lib/models"
+import { calculateLSAr, getColorCoding } from "@/lib/survey-data"
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,12 +15,24 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise
     const db = client.db("security_survey")
 
+    const lsarScore = calculateLSAr(sectionScores)
+    const colorCoding = getColorCoding(lsarScore)
+
+    const previousSurveys = await db.collection("survey_results").find({ state, lga }).sort({ date: -1 }).toArray()
+
+    const surveyCount = previousSurveys.length + 1
+    const previousSurveyId = previousSurveys.length > 0 ? previousSurveys[0]._id?.toString() : undefined
+
     const surveyResult: SurveyResult = {
       state,
       lga,
       date: new Date(),
       sectionScores,
       answers,
+      lsarScore,
+      colorCoding,
+      surveyCount,
+      previousSurveyId,
     }
 
     const result = await db.collection("survey_results").insertOne(surveyResult)
@@ -27,6 +40,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       id: result.insertedId,
+      surveyCount,
+      lsarScore,
     })
   } catch (error: any) {
     console.error("Error saving survey result:", error)
@@ -41,10 +56,14 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url)
     const state = url.searchParams.get("state")
+    const lga = url.searchParams.get("lga")
 
-    let query = {}
+    const query: any = {}
     if (state) {
-      query = { state }
+      query.state = state
+    }
+    if (lga) {
+      query.lga = lga
     }
 
     const results = await db.collection("survey_results").find(query).sort({ date: -1 }).limit(100).toArray()

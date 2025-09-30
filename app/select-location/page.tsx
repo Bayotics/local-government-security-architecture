@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react"
 import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
 import { Navbar } from "@/components/navbar"
 import { StateLGAMap } from "@/components/state-lga-map"
+import { PastSurveys } from "@/components/past-surveys"
+import type { SurveyResult } from "@/lib/models"
 
 interface State {
   id: number
@@ -43,8 +45,9 @@ export default function SelectLocation() {
   const [lgaScores, setLgaScores] = useState<LGAScore[]>([])
   const [loadingScores, setLoadingScores] = useState(false)
   const [scoreError, setScoreError] = useState<string | null>(null)
+  const [pastSurveys, setPastSurveys] = useState<SurveyResult[]>([])
+  const [loadingPastSurveys, setLoadingPastSurveys] = useState(false)
 
-  // Check authentication
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
     if (!isAuthenticated) {
@@ -85,7 +88,6 @@ export default function SelectLocation() {
     }
   }, [selectedState, lgas, states])
 
-  // Fetch LGA scores when both state and LGA are selected
   useEffect(() => {
     const fetchLGAScores = async () => {
       if (!selectedState || !selectedLga) return
@@ -114,17 +116,40 @@ export default function SelectLocation() {
     fetchLGAScores()
   }, [selectedState, selectedLga])
 
+  useEffect(() => {
+    const fetchPastSurveys = async () => {
+      if (!selectedState || !selectedLga) {
+        setPastSurveys([])
+        return
+      }
+
+      try {
+        setLoadingPastSurveys(true)
+        const response = await fetch(`/api/survey-results?state=${selectedState}&lga=${selectedLga}`)
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch past surveys")
+        }
+
+        const data = await response.json()
+        setPastSurveys(data)
+      } catch (error: any) {
+        console.error("Error fetching past surveys:", error)
+        setPastSurveys([])
+      } finally {
+        setLoadingPastSurveys(false)
+      }
+    }
+
+    fetchPastSurveys()
+  }, [selectedState, selectedLga])
+
   const handleContinue = () => {
     if (selectedState && selectedLga) {
-      // Clear previous survey data
       localStorage.removeItem("surveyAnswers")
       localStorage.removeItem("currentSectionIndex")
-
-      // Store selections in localStorage for use throughout the app
       localStorage.setItem("selectedState", selectedState)
       localStorage.setItem("selectedLga", selectedLga)
-
-      // Navigate to survey page
       router.push("/survey")
     }
   }
@@ -156,6 +181,7 @@ export default function SelectLocation() {
                           setSelectedState(value)
                           setSelectedLga("")
                           setShowMap(false)
+                          setPastSurveys([])
                         }}
                       >
                         <SelectTrigger id="state">
@@ -196,6 +222,10 @@ export default function SelectLocation() {
             </CardContent>
           </Card>
 
+          {!loadingPastSurveys && pastSurveys.length > 0 && (
+            <PastSurveys surveys={pastSurveys} selectedLga={selectedLga} />
+          )}
+
           {showMap && (
             <div>
               <StateLGAMap
@@ -207,33 +237,6 @@ export default function SelectLocation() {
                 onContinue={handleContinue}
               />
             </div>
-
-            // <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            //   <TabsList className="grid grid-cols-2 mb-4">
-            //     <TabsTrigger value="lga">State View</TabsTrigger>
-            //     {/* <TabsTrigger value="state">Country View</TabsTrigger> */}
-            //   </TabsList>
-
-            //   <TabsContent value="state">
-            //     <NigeriaStatesMap
-            //       selectedState={selectedState}
-            //       selectedLga={selectedLga}
-            //       lgaScores={lgaScores}
-            //       loading={loadingScores}
-            //       error={scoreError}
-            //     />
-            //   </TabsContent>
-
-            //   <TabsContent value="lga">
-            //     <StateLGAMap
-            //       selectedState={selectedState}
-            //       selectedLga={selectedLga}
-            //       lgaScores={lgaScores}
-            //       loading={loadingScores}
-            //       error={scoreError}
-            //     />
-            //   </TabsContent>
-            // </Tabs>
           )}
         </div>
       </div>
