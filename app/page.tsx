@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Loader2 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { useEffect } from "react"
 
@@ -22,8 +22,8 @@ const Home: FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
 
-  // Check if user is already authenticated
   useEffect(() => {
     const authStatus = localStorage.getItem("isAuthenticated") === "true"
     setIsAuthenticated(authStatus)
@@ -34,13 +34,10 @@ const Home: FC = () => {
     setIsLoading(true)
     setError(null)
 
-    // Simple timeout to simulate verification
     setTimeout(() => {
       if (accessCode === "12345678") {
-        // Store authentication state in localStorage
         localStorage.setItem("isAuthenticated", "true")
         setIsAuthenticated(true)
-        // Redirect to location selection
         router.push("/select-location")
       } else {
         setError("Invalid access code. Please try again.")
@@ -117,14 +114,22 @@ const Home: FC = () => {
                 <CardContent className="space-y-4">
                   <Button
                     onClick={() => {
-                      // Clear previous survey data
+                      setIsNavigating(true)
                       localStorage.removeItem("surveyAnswers")
                       localStorage.removeItem("currentSectionIndex")
                       router.push("/select-location")
                     }}
                     className="w-full"
+                    disabled={isNavigating}
                   >
-                    Start New Survey
+                    {isNavigating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading Survey...
+                      </>
+                    ) : (
+                      "Start New Survey"
+                    )}
                   </Button>
                   <Button onClick={() => router.push("/analysis")} variant="outline" className="w-full">
                     View Analysis Dashboard

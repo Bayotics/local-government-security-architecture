@@ -31,7 +31,8 @@ interface StateLGAMapProps {
   lgaScores: LGAScore[]
   loading: boolean
   error: string | null
-  onContinue?: () => void // Added onContinue prop for the continue button
+  onContinue?: () => void | Promise<void> // support async handler
+  isNavigating?: boolean // optional controlled prop
 }
 
 // Calculate the overall average score for an LGA
@@ -80,24 +81,44 @@ function haversineDistance(coord1: [number, number], coord2: [number, number]): 
   return R * c
 }
 
-export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, error, onContinue }: StateLGAMapProps) {
+export function StateLGAMap({
+  selectedState,
+  selectedLga,
+  lgaScores,
+  loading,
+  error,
+  onContinue,
+  isNavigating,
+}: StateLGAMapProps) {
   const [lgasInState, setLgasInState] = useState<string[]>([])
   const [borderLGAs, setBorderLGAs] = useState<string[]>([])
-  const [lgaData, setLgaData] = useState<Map<string, { score: number; color: string; hasSurvey: boolean }>>(new Map())
+  const [lgaData, setLgaData] = useState<Map<string, { score: number; color: string; hasSurvey: boolean }>>(
+    new Map(),
+  )
+
+  // internal navigating state (used when parent doesn't control with isNavigating prop)
+  const [internalNavigating, setInternalNavigating] = useState(false)
+
+  // prefer controlled prop if provided, otherwise use internal state
+  const navigating = typeof isNavigating === "boolean" ? isNavigating : internalNavigating
 
   // Get all LGAs for the selected state
   useEffect(() => {
     if (selectedState) {
-      // Get all LGAs for this state from our static data
-      const stateId = nigerianLGAs.find(
-        (lga) => lga.state_id === nigerianLGAs.find((l) => l.name === selectedLga)?.state_id,
-      )?.state_id
+      // Try to determine state id from selectedState or selectedLga (fallback)
+      const stateIdFromStateName = nigerianLGAs.find((l) => l.state === selectedState)?.state_id
+      const stateIdFromSelectedLga = nigerianLGAs.find((l) => l.name === selectedLga)?.state_id
+
+      const stateId = stateIdFromStateName ?? stateIdFromSelectedLga
 
       if (stateId) {
         const lgas = nigerianLGAs.filter((lga) => lga.state_id === stateId).map((lga) => lga.name)
-
         setLgasInState(lgas)
+      } else {
+        setLgasInState([])
       }
+    } else {
+      setLgasInState([])
     }
   }, [selectedState, selectedLga])
 
@@ -137,10 +158,13 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
         setBorderLGAs([])
       }
 
-      // Build score/color map (unchanged)
+      // Build score/color map
       const newLgaData = new Map<string, { score: number; color: string; hasSurvey: boolean }>()
 
-      lgasInState.forEach((lga) => {
+      // If lgasInState is empty, try to derive from features as fallback
+      const referenceLGAs = lgasInState.length > 0 ? lgasInState : features.map((f) => f.properties.shapeName)
+
+      referenceLGAs.forEach((lga) => {
         const lgaScoreData = lgaScores.find((item) => item.lga === lga && item.state === selectedState)
 
         if (lgaScoreData) {
@@ -170,7 +194,33 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
     }
   }, [selectedLga, lgaScores, lgasInState, selectedState])
 
-  // Zoom on select function
+  // Handler for Continue button that supports async or sync onContinue
+  const handleContinueClick = async () => {
+    if (!onContinue) return
+
+    // If parent isn't controlling navigating via prop, use internal state
+    const usingInternal = typeof isNavigating !== "boolean"
+
+    if (usingInternal) {
+      setInternalNavigating(true)
+    }
+
+    try {
+      const result = onContinue()
+      if (result && typeof (result as Promise<void>).then === "function") {
+        // onContinue returned a promise — await it
+        await result
+      }
+    } catch (err) {
+      console.error("Error in onContinue handler:", err)
+    } finally {
+      if (usingInternal) {
+        setInternalNavigating(false)
+      }
+    }
+  }
+
+  // Zoom on select function (nested component)
   function ZoomToLGAs({ selected, borders }: { selected: string; borders: string[] }) {
     const map = useMap()
 
@@ -198,8 +248,12 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
     }, [selected, borders])
 
     useEffect(() => {
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [80, 80] })
+      try {
+        if (bounds && bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [80, 80] })
+        }
+      } catch (e) {
+        // swallow map errors
       }
     }, [bounds, map])
 
@@ -243,8 +297,8 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                         isSelected
                           ? "ring-2 ring-offset-2 ring-primary"
                           : isBordering
-                            ? "ring-1 ring-offset-1 ring-primary/50"
-                            : ""
+                          ? "ring-1 ring-offset-1 ring-primary/50"
+                          : ""
                       }`}
                       style={{ backgroundColor: fillColor }}
                     >
@@ -266,7 +320,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
             <div>
               <div className="text-sm font-medium mb-2">Security Rating Scale</div>
               <div className="flex">
-                <div className="flex-1 h-4" style= {{ backgroundColor: "#e70909" }}></div>
+                <div className="flex-1 h-4" style={{ backgroundColor: "#e70909" }}></div>
                 <div className="flex-1 h-4" style={{ backgroundColor: "#f3f728" }}></div>
                 <div className="flex-1 h-4" style={{ backgroundColor: "#2323dd" }}></div>
                 <div className="flex-1 h-4" style={{ backgroundColor: "#f37209" }}></div>
@@ -325,12 +379,6 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
                   scrollWheelZoom={false}
                   style={{ height: "500px", width: "100%" }}
                 >
-                  {/* attribution='&copy; <a href="https://carto.com/">Carto</a>'
-                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" */}
-                  {/* <TileLayer
-                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  /> */}
                   <ZoomToLGAs selected={selectedLga} borders={borderLGAs} />
                   {features
                     .filter(
@@ -353,7 +401,7 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
 
                       // Popup label
                       const popupLabel = data?.hasSurvey
-                        ? `${lgaName} - Rating: ${data.score}/10`
+                        ? `${lgaName} - Rating: ${data.score}/100`
                         : `${lgaName} - No data`
 
                       return (
@@ -376,11 +424,22 @@ export function StateLGAMap({ selectedState, selectedLga, lgaScores, loading, er
             </div>
           </div>
         )}
-
+        {/* Continue Button */}
         {onContinue && !loading && !error && (
           <div className="mt-6 pt-4 border-t">
-            <Button onClick={onContinue} className="w-full" disabled={!selectedState || !selectedLga}>
-              Continue to Survey
+            <Button
+              onClick={handleContinueClick}
+              className="w-full"
+              disabled={!selectedState || !selectedLga || navigating}
+            >
+              {navigating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading Survey...
+                </>
+              ) : (
+                "Continue to Survey"
+              )}
             </Button>
           </div>
         )}

@@ -92,6 +92,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(processedScores)
   } catch (error: any) {
     console.error("Error fetching LGA scores:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Error fetching Scores. Check your network' }, { status: 500 })
   }
 }

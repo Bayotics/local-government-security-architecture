@@ -9,7 +9,7 @@ import { QuestionOptions } from "@/components/question-options"
 import { sections } from "@/lib/survey-data"
 import { useSurvey } from "@/context/survey-context"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, CheckCircle, Loader2 } from "lucide-react"
 import { DebugInfo } from "@/components/debug-info"
 import { Navbar } from "@/components/navbar"
 
@@ -30,6 +30,7 @@ export default function SurveyPage() {
 
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [progress, setProgress] = useState(0)
+  const [isNavigating, setIsNavigating] = useState(false)
   const questionsPerPage = 5
 
   useEffect(() => {
@@ -62,6 +63,10 @@ export default function SurveyPage() {
     setProgress(Math.round((answeredQuestions / totalQuestions) * 100))
   }, [answers])
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [currentPageIndex, currentSectionIndex])
+
   const currentSection = sections[currentSectionIndex]
   const totalQuestionsInSection = currentSection?.questions.length || 0
   const startIndex = currentPageIndex * questionsPerPage
@@ -81,6 +86,7 @@ export default function SurveyPage() {
         setCurrentSectionIndex(currentSectionIndex + 1)
         setCurrentPageIndex(0)
       } else if (isComplete) {
+        setIsNavigating(true)
         router.push("/survey/results")
       }
     }
@@ -232,11 +238,18 @@ export default function SurveyPage() {
 
                     <Button
                       onClick={goToNextPage}
-                      disabled={!areCurrentQuestionsAnswered}
+                      disabled={!areCurrentQuestionsAnswered || isNavigating}
                       className="flex items-center gap-2"
                     >
                       {currentSectionIndex === sections.length - 1 && currentPageIndex === totalPages - 1 ? (
-                        "View Results"
+                        isNavigating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading Results...
+                          </>
+                        ) : (
+                          "View Results"
+                        )
                       ) : (
                         <>
                           Next Page
