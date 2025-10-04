@@ -3,7 +3,7 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
 import "./globals.css"
-import 'leaflet/dist/leaflet.css'
+import "leaflet/dist/leaflet.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Add jsPDF and jspdf-autotable scripts */}
         <Script
           src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
           strategy="beforeInteractive"
@@ -31,7 +30,7 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange={false}>
           {children}
         </ThemeProvider>
       </body>
