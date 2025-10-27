@@ -1,5 +1,4 @@
 "use client"
-export const dynamic = "force-dynamic"
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +11,8 @@ import { Navbar } from "@/components/navbar"
 import { StateLGAMap } from "@/components/state-lga-map"
 import { PastSurveys } from "@/components/past-surveys"
 import type { SurveyResult } from "@/lib/models"
+
+export const dynamic = "force-dynamic"
 
 interface State {
   id: number
