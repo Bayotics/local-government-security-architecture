@@ -50,6 +50,7 @@ export default function SelectLocation() {
   const [loadingPastSurveys, setLoadingPastSurveys] = useState(false)
 
   useEffect(() => {
+     if (typeof window === "undefined") return
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
     if (!isAuthenticated) {
       router.push("/")
