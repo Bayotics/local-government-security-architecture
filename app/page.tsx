@@ -198,12 +198,12 @@ const Home: FC = () => {
                         Start New Survey
                       </>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-50 transition-opacity" />
                   </Button>
                   <Button
                     onClick={() => router.push("/analysis")}
                     variant="outline"
-                    className="w-full h-12 border-primary/30 hover:bg-primary/10 hover:border-primary"
+                    className="w-full h-12 border-primary/30 hover:bg-primary/30 hover:border-primary"
                   >
                     <TrendingUp className="mr-2 h-4 w-4" />
                     View Analysis Dashboard
