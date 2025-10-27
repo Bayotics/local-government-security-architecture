@@ -8,11 +8,19 @@ import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
 import { Navbar } from "@/components/navbar"
-import { StateLGAMap } from "@/components/state-lga-map"
-import { PastSurveys } from "@/components/past-surveys"
+import dynamic from 'next/dynamic'
+const StateLGAMap = dynamic(
+  () => import('@/components/state-lga-map').then((mod) => mod.StateLGAMap),
+  { ssr: false }
+)
+
+const PastSurveys = dynamic(
+  () => import('@/components/past-surveys').then((mod) => mod.PastSurveys),
+  { ssr: false }
+)
+
 import type { SurveyResult } from "@/lib/models"
 
-export const dynamic = "force-dynamic"
 
 interface State {
   id: number
