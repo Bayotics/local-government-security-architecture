@@ -1,12 +1,16 @@
 import type React from "react"
-import { Inter } from "next/font/google"
+import { Poppins, Raleway } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
 import "./globals.css"
 import "leaflet/dist/leaflet.css"
 
-const inter = Inter({ subsets: ["latin"] })
-
+const raleway = Poppins({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-raleway",
+  weight: ["500", "600", "700", "800", "900"],
+})
 export const metadata = {
   title: "Nigeria Security Awareness Survey",
   description: "Survey application for security awareness in Nigerian local governments",
@@ -29,7 +33,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className={inter.className}>
+      <body className={raleway.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange={false}>
           {children}
         </ThemeProvider>

@@ -150,3 +150,17 @@
     background-clip: text;
   }
 }
+.image-masked-text {
+  font-family: "Poppins", "Inter", sans-serif;
+  font-weight: 500;
+  display: inline-block;
+  line-height: 1.1;
+  position: relative;
+  color: #64ffda; /* fallback visible color */
+  background-repeat: repeat; /* allow background to move */
+  background-size: 200% 200%; /* larger than container for motion */
+  background-position: 0% 50%; /* starting position */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

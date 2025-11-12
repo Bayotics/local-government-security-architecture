@@ -1,221 +1,425 @@
 "use client"
-
-import type React from "react"
 import type { FC } from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Loader2, Shield, TrendingUp, Lock } from "lucide-react"
-import { Navbar } from "@/components/navbar"
-import { useEffect } from "react"
-import { motion } from "framer-motion"
+import type React from "react"
 
-const Home: FC = () => {
+import { useEffect } from "react"
+
+import { useState } from "react"
+
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { motion, AnimatePresence, useMotionValue } from "framer-motion"
+import { Shield, Database, MapPin, Brain, Users, TrendingUp, Lock, CheckCircle2 } from "lucide-react"
+import NigeriaMap from "@/components/nigeria-map-svg"
+import PageLoader from "@/components/page-loader"
+
+const LandingPage: FC = () => {
   const router = useRouter()
-  const [accessCode, setAccessCode] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isNavigating, setIsNavigating] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showRollingText, setShowRollingText] = useState(false)
+  const [showImageMask, setShowImageMask] = useState(false)
+
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    mouseX.set(e.clientX - rect.left)
+    mouseY.set(e.clientY - rect.top)
+  }
 
   useEffect(() => {
-    const authStatus = localStorage.getItem("isAuthenticated") === "true"
-    setIsAuthenticated(authStatus)
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+      setTimeout(() => setShowRollingText(true), 300)
+    }, 2300)
+
+    return () => clearTimeout(timer)
   }, [])
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+  useEffect(() => {
+    if (showRollingText) {
+      const timer = setTimeout(() => {
+        setShowImageMask(true)
+      }, 2000) // Match the total rolling animation duration
+      return () => clearTimeout(timer)
+    }
+  }, [showRollingText])
 
-    setTimeout(() => {
-      if (accessCode === "12345678") {
-        localStorage.setItem("isAuthenticated", "true")
-        setIsAuthenticated(true)
-        router.push("/select-location")
-      } else {
-        setError("Invalid access code. Please try again.")
-        setIsLoading(false)
-      }
-    }, 1000)
-  }
+  const heroText = "Empowering Nigeria's Security:"
+  const letters = heroText.split("")
 
   return (
     <>
-      {isAuthenticated && <Navbar />}
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <AnimatePresence>{isLoading && <PageLoader onLoadingComplete={() => setIsLoading(false)} />}</AnimatePresence>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isLoading ? 0 : 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="min-h-screen bg-[#0A192F] text-white overflow-hidden"
+      >
+        {/* Animated Background Grid */}
+        <div className="fixed inset-0 pointer-events-none opacity-20">
           <motion.div
-            className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+              linear-gradient(rgba(100, 255, 218, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(100, 255, 218, 0.1) 1px, transparent 1px)
+            `,
+              backgroundSize: "50px 50px",
+            }}
             animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3],
+              backgroundPosition: ["0px 0px", "50px 50px"],
             }}
             transition={{
-              duration: 8,
+              duration: 20,
               repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-            }}
-          />
-          <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-              delay: 1,
+              ease: "linear",
             }}
           />
         </div>
 
-        <div className="w-full max-w-md relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-8"
-          >
-            <motion.div
-              className="flex justify-center mb-4"
-              animate={{
-                scale: [1, 1.05, 1],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-              }}
-            >
-              <div className="relative">
-                <Image
-                  src="/logo.png?height=80&width=80"
-                  alt="Nigeria Security Survey Logo"
-                  width={80}
-                  height={80}
-                  className="rounded-full"
-                />
-                <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
-              </div>
-            </motion.div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">Nigeria Security Awareness Survey</h1>
-            <p className="text-muted-foreground mt-2 text-lg">Assess and improve security across local governments</p>
-          </motion.div>
+        {/* Hero Section */}
+        <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
+          <div className="max-w-7xl mx-auto w-full">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                className="space-y-8"
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <motion.h1
+                    className="text-4xl lg:text-6xl font-bold leading-tight text-balance image-masked-text"
+                    style={{
+                      backgroundImage: "url('/nigeria-bg.jpg')",
+                    }}
+                    animate={{
+                      backgroundPositionX: ["0%", "100%"], // horizontal movement
+                      backgroundPositionY: ["50%", "50%"], // keep vertical stable
+                    }}
+                    transition={{
+                      duration: 20,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      repeatType: "reverse",
+                    }}
+                  >
+                    Empowering Nigeria’s Security: <span className="text-[#64FFDA]">Data-Driven Insights</span>
+                  </motion.h1>
+                  <p className="text-xl lg:text-2xl text-gray-300 mt-6 text-pretty">for Every Local Government</p>
+                </motion.div>
 
-          {!isAuthenticated && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="glass-effect border-primary/20 shadow-2xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5 text-primary" />
-                    Access Required
-                  </CardTitle>
-                  <CardDescription>Enter your access code to continue</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleLogin}>
-                  <CardContent>
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <Alert variant="destructive" className="mb-4">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                      </motion.div>
-                    )}
-                    <div className="grid gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="accessCode">Access Code</Label>
-                        <Input
-                          id="accessCode"
-                          type="password"
-                          placeholder="Enter your access code"
-                          value={accessCode}
-                          onChange={(e) => setAccessCode(e.target.value)}
-                          required
-                          className="border-primary/30 focus:border-primary focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full relative overflow-hidden group" disabled={isLoading}>
-                      <span className="relative z-10">{isLoading ? "Verifying..." : "Continue"}</span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </motion.div>
-          )}
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="text-lg text-gray-400 leading-relaxed"
+                >
+                  Comprehensive security assessments across all 774 LGAs powered by AI-driven analysis and real-time
+                  data collection.
+                </motion.p>
 
-          {isAuthenticated && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-4"
-            >
-              <Card className="glass-effect border-primary/20 shadow-2xl">
-                <CardHeader>
-                  <CardTitle className="gradient-text">Welcome Back</CardTitle>
-                  <CardDescription>Choose an option to continue</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                  className="flex flex-col sm:flex-row gap-4"
+                >
+                  <motion.button
+                    onClick={() => router.push("/survey-access")}
+                    onMouseMove={handleMouseMove}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative bg-[#64FFDA] hover:bg-[#52d4ba] text-[#0A192F] font-semibold text-lg px-8 py-6 rounded-lg transition-colors overflow-hidden group"
+                  >
+                    <motion.div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{
+                        background: `radial-gradient(circle 100px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.3), transparent)`,
+                      }}
+                    />
+                    <motion.span
+                      className="relative z-10 block"
+                      animate={{
+                        textShadow: [
+                          "0 0 20px rgba(10, 25, 47, 0.3), 0 0 40px rgba(10, 25, 47, 0.2), 0 0 60px rgba(10, 25, 47, 0.1)",
+                          "0 0 30px rgba(10, 25, 47, 0.5), 0 0 60px rgba(10, 25, 47, 0.3), 0 0 90px rgba(10, 25, 47, 0.2)",
+                          "0 0 20px rgba(10, 25, 47, 0.3), 0 0 40px rgba(10, 25, 47, 0.2), 0 0 60px rgba(10, 25, 47, 0.1)",
+                        ],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      Take Survey Now
+                    </motion.span>
+
+                    {/* Multi-layered glow effects */}
+                    <motion.div
+                      className="absolute inset-0 rounded-lg pointer-events-none"
+                      animate={{
+                        boxShadow: [
+                          "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
+                          "0 0 30px rgba(100, 255, 218, 0.7), 0 0 60px rgba(100, 255, 218, 0.5), 0 0 90px rgba(100, 255, 218, 0.3)",
+                          "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
+                        ],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  </motion.button>
+
                   <Button
                     onClick={() => {
-                      setIsNavigating(true)
-                      localStorage.removeItem("surveyAnswers")
-                      localStorage.removeItem("currentSectionIndex")
-                      router.push("/select-location")
+                      document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })
                     }}
-                    className="w-full relative overflow-hidden group h-12"
-                    disabled={isNavigating}
-                  >
-                    {isNavigating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Loading Survey...
-                      </>
-                    ) : (
-                      <>
-                        <Shield className="mr-2 h-4 w-4" />
-                        Start New Survey
-                      </>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-50 transition-opacity" />
-                  </Button>
-                  <Button
-                    onClick={() => router.push("/analysis")}
                     variant="outline"
-                    className="w-full h-12 border-primary/30 hover:bg-primary/30 hover:border-primary"
+                    className="border-2 border-[#64FFDA] text-[#64FFDA] hover:bg-[#64FFDA]/10 font-semibold text-lg px-8 py-6 rounded-lg"
                   >
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    View Analysis Dashboard
+                    Learn More
                   </Button>
-                </CardContent>
-              </Card>
+                </motion.div>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                  className="text-sm text-gray-500 flex items-center gap-2"
+                >
+                  <Lock className="h-4 w-4" />
+                  Trusted by Security Professionals and Policy Makers
+                </motion.p>
+              </motion.div>
+
+              {/* Right Content - Interactive Nigeria Map */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.4 }}
+                className="relative"
+              >
+                <div className="relative aspect-square max-w-lg mx-auto">
+                  {/* Glowing border effect */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-gradient-to-r from-[#64FFDA] to-[#0A192F] opacity-30 blur-3xl"
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      opacity: [0.3, 0.5, 0.3],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "easeInOut",
+                    }}
+                  />
+
+                  {/* Nigeria Map Representation */}
+                  <NigeriaMap />
+
+                  {/* Stat badges */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.2 }}
+                    className="absolute top-10 left-0 bg-[#1E293B] border border-[#64FFDA]/30 rounded-lg px-4 py-2 backdrop-blur-sm z-10"
+                  >
+                    <p className="text-2xl font-bold text-[#64FFDA]">774</p>
+                    <p className="text-xs text-gray-400">LGAs Covered</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.4 }}
+                    className="absolute bottom-10 right-0 bg-[#1E293B] border border-[#64FFDA]/30 rounded-lg px-4 py-2 backdrop-blur-sm"
+                  >
+                    <p className="text-2xl font-bold text-[#64FFDA]">36</p>
+                    <p className="text-xs text-gray-400">States + FCT</p>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="relative py-20 px-4">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+                Comprehensive Security <span className="text-[#64FFDA]">Assessment</span>
+              </h2>
+              <p className="text-xl text-gray-400">Multi-dimensional analysis across key security domains</p>
             </motion.div>
-          )}
-        </div>
-      </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: Brain,
+                  title: "AI-Powered Analysis",
+                  description:
+                    "Automated security assessments with intelligent pattern recognition and predictive insights",
+                  color: "#64FFDA",
+                },
+                {
+                  icon: MapPin,
+                  title: "Granular Geographic Data",
+                  description: "Detailed mapping and visualization across all 774 local government areas",
+                  color: "#64FFDA",
+                },
+                {
+                  icon: Database,
+                  title: "Real-Time Data Collection",
+                  description: "Live survey responses with instant aggregation and comparative analysis",
+                  color: "#64FFDA",
+                },
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -10, transition: { duration: 0.2 } }}
+                  className="bg-[#1E293B] border border-[#64FFDA]/20 rounded-xl p-8 hover:border-[#64FFDA]/50 transition-all hover:shadow-lg hover:shadow-[#64FFDA]/20"
+                >
+                  <div className="mb-6">
+                    <div className="inline-flex p-4 bg-[#64FFDA]/10 rounded-lg">
+                      <feature.icon className="h-8 w-8" style={{ color: feature.color }} />
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
+                  <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Assessment Dimensions Section */}
+        <section className="relative py-20 px-4 bg-[#1E293B]/30">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+                Six Core <span className="text-[#64FFDA]">Dimensions</span>
+              </h2>
+              <p className="text-xl text-gray-400">Holistic security evaluation framework</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { icon: Shield, title: "Authority & Legitimacy", desc: "Trust in security institutions" },
+                { icon: Users, title: "Community Resilience", desc: "Local capacity and cohesion" },
+                { icon: Lock, title: "Physical Security", desc: "Infrastructure and protection" },
+                { icon: TrendingUp, title: "Economic Security", desc: "Livelihood and stability" },
+                { icon: Brain, title: "Information Security", desc: "Data and communication safety" },
+                { icon: CheckCircle2, title: "Service Delivery", desc: "Access to essential services" },
+              ].map((dimension, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className="bg-[#0A192F] border border-[#64FFDA]/20 rounded-lg p-6 hover:border-[#64FFDA]/50 transition-all"
+                >
+                  <dimension.icon className="h-6 w-6 text-[#64FFDA] mb-3" />
+                  <h4 className="text-lg font-semibold mb-2">{dimension.title}</h4>
+                  <p className="text-sm text-gray-400">{dimension.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="relative py-20 px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="space-y-8"
+            >
+              <h2 className="text-4xl lg:text-5xl font-bold">
+                Ready to Contribute to <span className="text-[#64FFDA]">Nigeria's Security?</span>
+              </h2>
+              <p className="text-xl text-gray-400">
+                Join security professionals and policy makers in building a comprehensive security database
+              </p>
+              <motion.button
+                onClick={() => router.push("/survey-access")}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative bg-[#64FFDA] hover:bg-[#52d4ba] text-[#0A192F] font-semibold text-lg px-12 py-6 rounded-lg transition-colors"
+              >
+                <motion.span
+                  className="relative z-10"
+                  animate={{
+                    textShadow: [
+                      "0 0 20px rgba(100, 255, 218, 0.3), 0 0 40px rgba(100, 255, 218, 0.2)",
+                      "0 0 30px rgba(100, 255, 218, 0.5), 0 0 60px rgba(100, 255, 218, 0.3)",
+                      "0 0 20px rgba(100, 255, 218, 0.3), 0 0 40px rgba(100, 255, 218, 0.2)",
+                    ],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                  }}
+                >
+                  Start Survey Now
+                </motion.span>
+
+                <motion.div
+                  className="absolute inset-0 rounded-lg"
+                  animate={{
+                    boxShadow: [
+                      "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
+                      "0 0 30px rgba(100, 255, 218, 0.7), 0 0 60px rgba(100, 255, 218, 0.5), 0 0 90px rgba(100, 255, 218, 0.3)",
+                      "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
+                    ],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                  }}
+                />
+              </motion.button>
+            </motion.div>
+          </div>
+        </section>
+      </motion.div>
     </>
   )
 }
 
-export default Home
+export default LandingPage
