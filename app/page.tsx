@@ -5,13 +5,15 @@ import type React from "react"
 import { useEffect } from "react"
 
 import { useState } from "react"
-
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue } from "framer-motion"
-import { Shield, Database, MapPin, Brain, Users, TrendingUp, Lock, CheckCircle2 } from "lucide-react"
+import { Shield, Database, MapPin, Brain, Users, TrendingUp, Lock, CheckCircle2 } from 'lucide-react'
 import NigeriaMap from "@/components/nigeria-map-svg"
 import PageLoader from "@/components/page-loader"
+import ShinyRotatingBorderButton from "@/components/shiny-button"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import VideoPlayerPopup from "@/components/video-player-popup"
 
 const LandingPage: FC = () => {
   const router = useRouter()
@@ -53,11 +55,13 @@ const LandingPage: FC = () => {
     <>
       <AnimatePresence>{isLoading && <PageLoader onLoadingComplete={() => setIsLoading(false)} />}</AnimatePresence>
 
+      <Header />
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: isLoading ? 0 : 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="min-h-screen bg-[#0A192F] text-white overflow-hidden"
+        className="min-h-screen bg-black text-white overflow-hidden"
       >
         {/* Animated Background Grid */}
         <div className="fixed inset-0 pointer-events-none opacity-20">
@@ -82,7 +86,7 @@ const LandingPage: FC = () => {
         </div>
 
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
+        <section className="relative min-h-screen flex items-center justify-center px-4 py-20 mt-24">
           <div className="max-w-7xl mx-auto w-full">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
@@ -108,12 +112,12 @@ const LandingPage: FC = () => {
                     }}
                     transition={{
                       duration: 20,
-                      repeat: Infinity,
+                      repeat: Number.POSITIVE_INFINITY,
                       ease: "easeInOut",
                       repeatType: "reverse",
                     }}
                   >
-                    Empowering Nigeria’s Security: <span className="text-[#64FFDA]">Data-Driven Insights</span>
+                    National Security Asessment & <span className="text-[#64FFDA]">Data-Driven Insights</span>
                   </motion.h1>
                   <p className="text-xl lg:text-2xl text-gray-300 mt-6 text-pretty">for Every Local Government</p>
                 </motion.div>
@@ -134,64 +138,7 @@ const LandingPage: FC = () => {
                   transition={{ duration: 0.6, delay: 0.6 }}
                   className="flex flex-col sm:flex-row gap-4"
                 >
-                  <motion.button
-                    onClick={() => router.push("/survey-access")}
-                    onMouseMove={handleMouseMove}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="relative bg-[#64FFDA] hover:bg-[#52d4ba] text-[#0A192F] font-semibold text-lg px-8 py-6 rounded-lg transition-colors overflow-hidden group"
-                  >
-                    <motion.div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      style={{
-                        background: `radial-gradient(circle 100px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.3), transparent)`,
-                      }}
-                    />
-                    <motion.span
-                      className="relative z-10 block"
-                      animate={{
-                        textShadow: [
-                          "0 0 20px rgba(10, 25, 47, 0.3), 0 0 40px rgba(10, 25, 47, 0.2), 0 0 60px rgba(10, 25, 47, 0.1)",
-                          "0 0 30px rgba(10, 25, 47, 0.5), 0 0 60px rgba(10, 25, 47, 0.3), 0 0 90px rgba(10, 25, 47, 0.2)",
-                          "0 0 20px rgba(10, 25, 47, 0.3), 0 0 40px rgba(10, 25, 47, 0.2), 0 0 60px rgba(10, 25, 47, 0.1)",
-                        ],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      Take Survey Now
-                    </motion.span>
-
-                    {/* Multi-layered glow effects */}
-                    <motion.div
-                      className="absolute inset-0 rounded-lg pointer-events-none"
-                      animate={{
-                        boxShadow: [
-                          "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
-                          "0 0 30px rgba(100, 255, 218, 0.7), 0 0 60px rgba(100, 255, 218, 0.5), 0 0 90px rgba(100, 255, 218, 0.3)",
-                          "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
-                        ],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  </motion.button>
-
-                  <Button
-                    onClick={() => {
-                      document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })
-                    }}
-                    variant="outline"
-                    className="border-2 border-[#64FFDA] text-[#64FFDA] hover:bg-[#64FFDA]/10 font-semibold text-lg px-8 py-6 rounded-lg"
-                  >
-                    Learn More
-                  </Button>
+                  <ShinyRotatingBorderButton />
                 </motion.div>
 
                 <motion.p
@@ -200,8 +147,35 @@ const LandingPage: FC = () => {
                   transition={{ duration: 0.6, delay: 0.8 }}
                   className="text-sm text-gray-500 flex items-center gap-2"
                 >
-                  <Lock className="h-4 w-4" />
-                  Trusted by Security Professionals and Policy Makers
+                  <div className="flex items-center gap-3">
+                    <div className="flex -space-x-2">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4, delay: 1.0 }}
+                        className="w-8 h-8 rounded-full border-2 border-[#0A192F] overflow-hidden bg-gray-600"
+                      >
+                        <img src="/algon.jpeg" alt="Professional 1" className="w-full h-full object-cover" />
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4, delay: 1.1 }}
+                        className="w-8 h-8 rounded-full border-2 border-[#0A192F] overflow-hidden bg-gray-600"
+                      >
+                        <img src="/onsa.jpg" alt="Professional 2" className="w-full h-full object-cover" />
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4, delay: 1.2 }}
+                        className="w-8 h-8 rounded-full border-2 border-[#0A192F] overflow-hidden bg-gray-600"
+                      >
+                        <img src="/navy.jpeg" alt="Professional 3" className="w-full h-full object-cover" />
+                      </motion.div>
+                    </div>
+                    Trusted by Security Professionals and Policy Makers
+                  </div>
                 </motion.p>
               </motion.div>
 
@@ -237,7 +211,7 @@ const LandingPage: FC = () => {
                     transition={{ delay: 1.2 }}
                     className="absolute top-10 left-0 bg-[#1E293B] border border-[#64FFDA]/30 rounded-lg px-4 py-2 backdrop-blur-sm z-10"
                   >
-                    <p className="text-2xl font-bold text-[#64FFDA]">774</p>
+                    <p className="text-2xl font-normal text-[#64FFDA]">774</p>
                     <p className="text-xs text-gray-400">LGAs Covered</p>
                   </motion.div>
 
@@ -247,7 +221,7 @@ const LandingPage: FC = () => {
                     transition={{ delay: 1.4 }}
                     className="absolute bottom-10 right-0 bg-[#1E293B] border border-[#64FFDA]/30 rounded-lg px-4 py-2 backdrop-blur-sm"
                   >
-                    <p className="text-2xl font-bold text-[#64FFDA]">36</p>
+                    <p className="text-2xl font-normal text-[#64FFDA]">36</p>
                     <p className="text-xs text-gray-400">States + FCT</p>
                   </motion.div>
                 </div>
@@ -266,10 +240,12 @@ const LandingPage: FC = () => {
               transition={{ duration: 0.6 }}
               className="text-center mb-16"
             >
-              <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+              <h2 className="text-4xl lg:text-5xl font-medium mb-4">
                 Comprehensive Security <span className="text-[#64FFDA]">Assessment</span>
               </h2>
-              <p className="text-xl text-gray-400">Multi-dimensional analysis across key security domains</p>
+              <p className="text-xl font-extralight text-gray-400">
+                Multi-dimensional analysis across key security domains
+              </p>
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -308,8 +284,8 @@ const LandingPage: FC = () => {
                       <feature.icon className="h-8 w-8" style={{ color: feature.color }} />
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                  <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-2xl font-extralight mb-4">{feature.title}</h3>
+                  <p className="text-gray-400 leading-relaxed font-thin">{feature.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -326,7 +302,7 @@ const LandingPage: FC = () => {
               transition={{ duration: 0.6 }}
               className="text-center mb-16"
             >
-              <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+              <h2 className="text-4xl lg:text-5xl font-medium mb-4">
                 Six Core <span className="text-[#64FFDA]">Dimensions</span>
               </h2>
               <p className="text-xl text-gray-400">Holistic security evaluation framework</p>
@@ -350,7 +326,7 @@ const LandingPage: FC = () => {
                   className="bg-[#0A192F] border border-[#64FFDA]/20 rounded-lg p-6 hover:border-[#64FFDA]/50 transition-all"
                 >
                   <dimension.icon className="h-6 w-6 text-[#64FFDA] mb-3" />
-                  <h4 className="text-lg font-semibold mb-2">{dimension.title}</h4>
+                  <h4 className="text-lg font-thin mb-2">{dimension.title}</h4>
                   <p className="text-sm text-gray-400">{dimension.desc}</p>
                 </motion.div>
               ))}
@@ -368,56 +344,21 @@ const LandingPage: FC = () => {
               transition={{ duration: 0.6 }}
               className="space-y-8"
             >
-              <h2 className="text-4xl lg:text-5xl font-bold">
+              <h2 className="text-4xl lg:text-5xl font-medium">
                 Ready to Contribute to <span className="text-[#64FFDA]">Nigeria's Security?</span>
               </h2>
               <p className="text-xl text-gray-400">
                 Join security professionals and policy makers in building a comprehensive security database
               </p>
-              <motion.button
-                onClick={() => router.push("/survey-access")}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                className="relative bg-[#64FFDA] hover:bg-[#52d4ba] text-[#0A192F] font-semibold text-lg px-12 py-6 rounded-lg transition-colors"
-              >
-                <motion.span
-                  className="relative z-10"
-                  animate={{
-                    textShadow: [
-                      "0 0 20px rgba(100, 255, 218, 0.3), 0 0 40px rgba(100, 255, 218, 0.2)",
-                      "0 0 30px rgba(100, 255, 218, 0.5), 0 0 60px rgba(100, 255, 218, 0.3)",
-                      "0 0 20px rgba(100, 255, 218, 0.3), 0 0 40px rgba(100, 255, 218, 0.2)",
-                    ],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "easeInOut",
-                  }}
-                >
-                  Start Survey Now
-                </motion.span>
-
-                <motion.div
-                  className="absolute inset-0 rounded-lg"
-                  animate={{
-                    boxShadow: [
-                      "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
-                      "0 0 30px rgba(100, 255, 218, 0.7), 0 0 60px rgba(100, 255, 218, 0.5), 0 0 90px rgba(100, 255, 218, 0.3)",
-                      "0 0 20px rgba(100, 255, 218, 0.5), 0 0 40px rgba(100, 255, 218, 0.3), 0 0 60px rgba(100, 255, 218, 0.1)",
-                    ],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Number.POSITIVE_INFINITY,
-                    ease: "easeInOut",
-                  }}
-                />
-              </motion.button>
+              <ShinyRotatingBorderButton />
             </motion.div>
           </div>
         </section>
+
+        <Footer />
       </motion.div>
+
+      <VideoPlayerPopup videoUrl="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder-video-LKBjfiLgqRWW44XLtCm3YACUfr4Ckf.mp4" />
     </>
   )
 }
