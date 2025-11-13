@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
 import { ArrowRight } from "lucide-react"
+import { useRouter } from "next/navigation"   // ← ADD THIS
 
 export default function ShinyRotatingBorderButton({
   text = "Take Survey Now",
@@ -13,6 +14,7 @@ export default function ShinyRotatingBorderButton({
   const [hovered, setHovered] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [circlePosition, setCirclePosition] = useState({ x: 0, y: 0 })
+  const router = useRouter()   // ← ADD THIS
 
   // Calculate arrow's position inside the button (for expansion origin)
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function ShinyRotatingBorderButton({
       className="relative inline-flex p-[2px] rounded-[2rem] overflow-hidden cursor-pointer select-none"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => router.push("/survey-access")}
     >
       {/* Animated gradient border */}
       <motion.div

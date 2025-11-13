@@ -106,62 +106,100 @@ const SurveyAccess: FC = () => {
                 <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
               </div>
             </motion.div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">Nigeria Security Awareness Survey</h1>
+            <h1 className="text-4xl font-normal gradient-text mb-2">Nigeria Security Assessment Survey</h1>
             <p className="text-muted-foreground mt-2 text-lg">Assess and improve security across local governments</p>
           </motion.div>
 
           {!isAuthenticated && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+  initial={{ opacity: 0, scale: 0.95 }}
+  animate={{ opacity: 1, scale: 1 }}
+  transition={{ duration: 0.5, delay: 0.2 }}
+>
+  {/* OUTER WRAPPER just like the button */}
+  <div className="relative p-[2px] rounded-2xl overflow-hidden">
+
+    {/* Rotating gradient border */}
+    {/* 💡 CHANGE: Set z-index to a low value (e.g., z-10) */}
+    <motion.div
+      className="absolute inset-0 rounded-2xl z-10" 
+      animate={{ rotate: 360 }}
+      transition={{
+        duration: 7,
+        repeat: Infinity,
+        ease: "linear",
+      }}
+      style={{
+        background:
+          "bg-white ",
+        filter: "blur(1px)",
+      }}
+    />
+
+    {/* MASK LAYER (This must now be ON TOP of the gradient) */}
+    {/* 💡 CHANGE: Increase z-index to be higher than the gradient (e.g., z-20) */}
+    <div className="absolute inset-[3px] rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 z-22" /> 
+
+    {/* REAL CARD CONTENT (This must be on top of everything) */}
+    {/* 💡 OPTIONAL: Ensure this is the highest z-index if needed (e.g., z-30) */}
+    <Card className="relative z-30 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl">
+       <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lock className="h-5 w-5 text-primary font-thin" />
+          Access Required
+        </CardTitle>
+        <CardDescription>Enter your access code to continue</CardDescription>
+      </CardHeader>
+
+      <form onSubmit={handleLogin}>
+        <CardContent>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <Card className="glass-effect border-primary/20 shadow-2xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5 text-primary" />
-                    Access Required
-                  </CardTitle>
-                  <CardDescription>Enter your access code to continue</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleLogin}>
-                  <CardContent>
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <Alert variant="destructive" className="mb-4">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                      </motion.div>
-                    )}
-                    <div className="grid gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="accessCode">Access Code</Label>
-                        <Input
-                          id="accessCode"
-                          type="password"
-                          placeholder="Enter your access code"
-                          value={accessCode}
-                          onChange={(e) => setAccessCode(e.target.value)}
-                          required
-                          className="border-primary/30 focus:border-primary focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full relative overflow-hidden group" disabled={isLoading}>
-                      <span className="relative z-10">{isLoading ? "Verifying..." : "Continue"}</span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             </motion.div>
+          )}
+
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="accessCode">Access Code</Label>
+              <Input
+                id="accessCode"
+                type="password"
+                placeholder="Enter your access code"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+                required
+                className="border-primary/30 focus:border-primary focus:ring-primary"
+              />
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter>
+          <Button
+            type="submit"
+            className="w-full relative overflow-hidden group"
+            disabled={isLoading}
+          >
+            <span className="relative z-10">
+              {isLoading ? "Verifying..." : "Continue"}
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
+  </div>
+</motion.div>
+
+
           )}
 
           {isAuthenticated && (

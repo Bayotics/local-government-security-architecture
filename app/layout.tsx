@@ -9,7 +9,7 @@ const raleway = Poppins({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-raleway",
-  weight: ["500", "600", "700", "800", "900"],
+  weight: ["100", "200","300", "400","500", "600", "700", "800", "900"],
 })
 export const metadata = {
   title: "Nigeria Security Awareness Survey",
