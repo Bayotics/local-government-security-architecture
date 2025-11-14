@@ -64,10 +64,7 @@ export function Navbar() {
   return (
     <div className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="flex h-16 items-center px-4 max-w-7xl mx-auto">
-        <div className="flex items-center font-bold text-xl mr-4">
-          <Shield className="h-6 w-6 mr-2 text-primary animate-pulse" />
-          <span className="gradient-text">Nigeria Security Survey</span>
-        </div>
+        
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">

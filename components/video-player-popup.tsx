@@ -116,7 +116,7 @@ export default function VideoPlayerPopup({ videoUrl }: VideoPlayerPopupProps) {
       >
         <motion.button
           onClick={handleOpenModal}
-          className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-[#64FFDA] shadow-2xl shadow-[#64FFDA]/50 group cursor-pointer"
+          className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-[#34D399] shadow-2xl shadow-[#34D399]/50 group cursor-pointer"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -139,7 +139,7 @@ export default function VideoPlayerPopup({ videoUrl }: VideoPlayerPopupProps) {
             </motion.div>
           </div>
           <motion.div
-            className="absolute inset-0 border-4 border-[#64FFDA] rounded-full"
+            className="absolute inset-0 border-4 border-[#34D399] rounded-full"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.5, 0, 0.5],
@@ -200,7 +200,7 @@ export default function VideoPlayerPopup({ videoUrl }: VideoPlayerPopupProps) {
                     className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
                   >
                     <motion.div
-                      className="w-20 h-20 bg-[#64FFDA] rounded-full flex items-center justify-center shadow-xl shadow-[#64FFDA]/50"
+                      className="w-20 h-20 bg-[#34D399] rounded-full flex items-center justify-center shadow-xl shadow-[#34D399]/50"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -227,7 +227,7 @@ export default function VideoPlayerPopup({ videoUrl }: VideoPlayerPopupProps) {
                         max={duration || 0}
                         value={currentTime}
                         onChange={handleSeek}
-                        className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#64FFDA] [&::-webkit-slider-thumb]:cursor-pointer"
+                        className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#34D399] [&::-webkit-slider-thumb]:cursor-pointer"
                       />
                       <div className="flex justify-between text-xs text-gray-400 mt-1">
                         <span>{formatTime(currentTime)}</span>
