@@ -8,10 +8,11 @@ import { Progress } from "@/components/ui/progress"
 import { QuestionOptions } from "@/components/question-options"
 import { sections } from "@/lib/survey-data"
 import { useSurvey } from "@/context/survey-context"
-import { useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, CheckCircle, Loader2 } from "lucide-react"
+import { useRouter } from 'next/navigation'
+import { ChevronLeft, ChevronRight, CheckCircle, Loader2 } from 'lucide-react'
 import { DebugInfo } from "@/components/debug-info"
 import { Navbar } from "@/components/navbar"
+import { SectionQuotationPopup } from "@/components/section-quotation-popup"
 
 const QUESTIONS_PER_PAGE = 5
 
@@ -31,6 +32,8 @@ export default function SurveyPage() {
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [progress, setProgress] = useState(0)
   const [isNavigating, setIsNavigating] = useState(false)
+  const [showQuotation, setShowQuotation] = useState(true)
+  const [hasShownQuotation, setHasShownQuotation] = useState<Set<number>>(new Set())
   const questionsPerPage = 5
 
   useEffect(() => {
@@ -58,6 +61,12 @@ export default function SurveyPage() {
   }, [selectedState, selectedLga, router])
 
   useEffect(() => {
+    if (!hasShownQuotation.has(currentSectionIndex)) {
+      setShowQuotation(true)
+    }
+  }, [currentSectionIndex, hasShownQuotation])
+
+  useEffect(() => {
     const totalQuestions = sections.reduce((total, section) => total + section.questions.length, 0)
     const answeredQuestions = Object.keys(answers).length
     setProgress(Math.round((answeredQuestions / totalQuestions) * 100))
@@ -75,6 +84,11 @@ export default function SurveyPage() {
   const totalPages = Math.ceil(totalQuestionsInSection / questionsPerPage)
 
   const areCurrentQuestionsAnswered = currentQuestions.every((question) => answers[question.id] !== undefined)
+
+  const handleQuotationContinue = () => {
+    setShowQuotation(false)
+    setHasShownQuotation(prev => new Set(prev).add(currentSectionIndex))
+  }
 
   const goToNextPage = () => {
     if (!areCurrentQuestionsAnswered) return
@@ -122,6 +136,13 @@ export default function SurveyPage() {
   return (
     <>
       <Navbar />
+      <SectionQuotationPopup
+        isOpen={showQuotation}
+        sectionTitle={currentSection.title}
+        sectionId={currentSection.id}
+        onContinue={handleQuotationContinue}
+      />
+      
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -162,7 +183,7 @@ export default function SurveyPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-blue-600 bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-full min-w-fit">
-                        {currentSection.tabHeader}
+                        Section {currentSectionIndex + 1}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         Page {currentPageIndex + 1} of {totalPages}

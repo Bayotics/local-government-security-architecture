@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useSurvey } from "@/context/survey-context"
 import { sections, getScoreFromOptionId } from "@/lib/survey-data"
-import { useRouter } from "next/navigation"
-import { Loader2, Download, AlertTriangle, RefreshCcw } from "lucide-react"
+import { useRouter } from 'next/navigation'
+import { Loader2, Download, AlertTriangle, RefreshCcw } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Navbar } from "@/components/navbar"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
@@ -54,6 +54,8 @@ export default function ResultsPage() {
   const [previousSurvey, setPreviousSurvey] = useState<SurveyResult | null>(null)
   const [comparison, setComparison] = useState<OverallComparison | null>(null)
   const [loadingPreviousSurvey, setLoadingPreviousSurvey] = useState(false)
+  const [neighboringAdvisory, setNeighboringAdvisory] = useState<string>("")
+  const [loadingAdvisory, setLoadingAdvisory] = useState(false)
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
@@ -333,6 +335,7 @@ export default function ResultsPage() {
       currentY = (doc as any).lastAutoTable.finalY + 10
 
       doc.setFontSize(14)
+      doc.setTextColor(0, 51, 102)
       doc.text("Overall LSAr Rating", 20, currentY)
       currentY += 8
 
@@ -506,6 +509,35 @@ export default function ResultsPage() {
         })
 
         currentY = (doc as any).lastAutoTable.finalY + 10
+
+        if (neighboringAdvisory && neighboringLGAs.filter((lga) => lga.score > 0).length > 0) {
+          if (currentY > 250) {
+            doc.addPage()
+            currentY = 20
+          }
+
+          doc.setFontSize(12)
+          doc.setTextColor(0, 0, 0)
+          doc.setFont(undefined, "bold")
+          doc.text("Regional Security Advisory", 20, currentY)
+          currentY += 6
+
+          doc.setFont(undefined, "normal")
+          doc.setFontSize(10)
+          doc.setTextColor(60, 60, 60)
+          
+          const advisoryLines = doc.splitTextToSize(neighboringAdvisory, 170)
+          advisoryLines.forEach((line: string) => {
+            if (currentY > 270) {
+              doc.addPage()
+              currentY = 20
+            }
+            doc.text(line, 20, currentY)
+            currentY += 5
+          })
+
+          currentY += 5
+        }
       }
 
       if (currentY > 250) {
@@ -636,6 +668,60 @@ export default function ResultsPage() {
     }
   }, [previousSurvey, sectionScores, overallLSAr, selectedState, selectedLga, answers])
 
+  useEffect(() => {
+    const generateNeighboringAdvisory = async () => {
+      const lgasWithData = neighboringLGAs.filter((lga) => lga.score > 0)
+      
+      if (lgasWithData.length === 0) {
+        setNeighboringAdvisory("")
+        return
+      }
+
+      try {
+        setLoadingAdvisory(true)
+        
+        const lgaPerformanceData = lgasWithData.map((lga) => ({
+          name: lga.lga,
+          score: lga.score,
+          rating: getLSArRating(lga.score)
+        }))
+
+        const currentLgaData = {
+          name: selectedLga,
+          score: overallLSAr,
+          rating: getLSArRating(overallLSAr)
+        }
+
+        const response = await fetch("/api/generate-neighboring-advisory", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            currentLga: currentLgaData,
+            neighboringLGAs: lgaPerformanceData,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to generate advisory")
+        }
+
+        const data = await response.json()
+        setNeighboringAdvisory(data.advisory)
+      } catch (error) {
+        console.error("Error generating neighboring advisory:", error)
+        setNeighboringAdvisory("")
+      } finally {
+        setLoadingAdvisory(false)
+      }
+    }
+
+    if (neighboringLGAs.length > 0 && overallLSAr > 0 && selectedLga) {
+      generateNeighboringAdvisory()
+    }
+  }, [neighboringLGAs, overallLSAr, selectedLga])
+
   return (
     <>
       <Navbar />
@@ -722,6 +808,27 @@ export default function ResultsPage() {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+                  
+                  {neighboringLGAs.filter((lga) => lga.score > 0).length > 0 && (
+                    <div className="mt-6 pt-6 border-t">
+                      <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        Regional Security Advisory
+                      </h4>
+                      {loadingAdvisory ? (
+                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Analyzing neighboring LGAs performance...</span>
+                        </div>
+                      ) : neighboringAdvisory ? (
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
+                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                            {neighboringAdvisory}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
