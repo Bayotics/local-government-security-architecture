@@ -48,3 +48,48 @@ export interface LGASurveyMetadata {
   lastSurveyDate: Date
   lastUpdated: Date
 }
+
+export interface LGAWhitelist {
+  _id?: string
+  lgaId: string // Unique identifier for LGA (e.g., "25-510" for state 25, lga 510)
+  lgaName: string
+  stateName: string
+  stateId: number
+  chairmanName: string
+  officialPhone: string
+  representativePhone?: string
+  status: "active" | "inactive" | "replaced"
+  boundDeviceId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface OTPSession {
+  _id?: string
+  lgaId: string
+  phone: string
+  otp: string
+  expiresAt: Date
+  createdAt: Date
+  attempts: number
+}
+
+export interface UserSession {
+  _id?: string
+  lgaId: string
+  deviceId: string
+  ipAddress: string
+  userAgent: string
+  createdAt: Date
+  lastActivity: Date
+  isActive: boolean
+}
+
+export interface AdminUser {
+  _id?: string
+  username: string
+  passwordHash: string
+  role: "super_admin" | "admin"
+  createdAt: Date
+  lastLogin?: Date
+}

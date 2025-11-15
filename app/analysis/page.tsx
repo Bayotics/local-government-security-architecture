@@ -6,10 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Navbar } from "@/components/navbar"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Cell } from "recharts"
-import { Loader2, AlertTriangle, TrendingUp, Users, MapPin } from "lucide-react"
+import { Loader2, AlertTriangle, TrendingUp, Users, MapPin } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/newChart"
 import { sections, colorCoding } from "@/lib/survey-data"
@@ -36,15 +35,22 @@ export default function AnalysisPage() {
   const [selectedSection, setSelectedSection] = useState<string>("decision-making")
   const [activeTab, setActiveTab] = useState("lsar")
 
-  // Check authentication
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
-    if (!isAuthenticated) {
-      router.push("/")
-    } else {
-      fetchStateScores()
-    }
+    checkAuth()
+    fetchStateScores()
   }, [router])
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch("/api/admin/check-auth")
+      const { isAdmin } = await response.json()
+      if (!isAdmin) {
+        router.push("/admin/login")
+      }
+    } catch (error) {
+      router.push("/admin/login")
+    }
+  }
 
   const fetchStateScores = async () => {
     try {
@@ -92,7 +98,6 @@ export default function AnalysisPage() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -226,7 +231,7 @@ export default function AnalysisPage() {
                             label={{ value: "LSAr Score (%)", angle: -90, position: "insideLeft" }}
                           />
                           <ChartTooltip
-                            content={
+                            content={(
                               <ChartTooltipContent
                                 formatter={(value, name, props) => {
                                   if (name === "lsarScore") {
@@ -246,7 +251,7 @@ export default function AnalysisPage() {
                                   return [value, name]
                                 }}
                               />
-                            }
+                            )}
                           />
                           <Bar dataKey="lsarScore" name="LSAr Score" radius={[4, 4, 0, 0]}>
                             {lsarChartData.map((entry, index) => (
@@ -315,7 +320,7 @@ export default function AnalysisPage() {
                           <XAxis dataKey="state" angle={-45} textAnchor="end" height={70} />
                           <YAxis domain={[0, 100]} label={{ value: "Score (%)", angle: -90, position: "insideLeft" }} />
                           <ChartTooltip
-                            content={
+                            content={(
                               <ChartTooltipContent
                                 formatter={(value, name, props) => {
                                   if (name === "score")
@@ -323,7 +328,7 @@ export default function AnalysisPage() {
                                   return [value, name]
                                 }}
                               />
-                            }
+                            )}
                           />
                           <Bar dataKey="score" name="Section Score" fill="var(--color-score)" radius={[4, 4, 0, 0]} />
                         </BarChart>
@@ -399,6 +404,7 @@ export default function AnalysisPage() {
                             institutions: item.averageScores["institutions"] || 0,
                             evaluation: item.averageScores["evaluation"] || 0,
                           }))}
+
                           margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
