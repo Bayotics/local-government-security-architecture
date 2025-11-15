@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
 import "./globals.css"
 import "leaflet/dist/leaflet.css"
+import { Analytics } from '@vercel/analytics/next'
 
 const raleway = Poppins({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange={false}>
           {children}
         </ThemeProvider>
+         <Analytics />
       </body>
     </html>
   )
