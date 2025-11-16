@@ -53,7 +53,7 @@ export default function ShinyRotatingBorderButton({
       className="relative inline-flex p-[2px] rounded-[2rem] overflow-hidden cursor-pointer select-none"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => router.push("/survey-access")}
+      onClick={() => router.push("/lga-login")}
     >
       {/* Animated gradient border */}
       <motion.div

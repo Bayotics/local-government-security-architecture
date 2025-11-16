@@ -1,45 +1,20 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useSurvey } from "@/context/survey-context"
-import { sections, getScoreFromOptionId } from "@/lib/survey-data"
 import { useRouter } from 'next/navigation'
-import { Loader2, Download, AlertTriangle, RefreshCcw } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useSurvey } from "@/context/survey-context"
+import { sections } from "@/lib/survey-data"
 import { Navbar } from "@/components/navbar"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
-import { features } from "@/lgaShapes"
-import booleanIntersects from "@turf/boolean-intersects"
-import type { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
-import { jsPDF } from "jspdf"
-import autoTable from "jspdf-autotable"
-import type { SurveyResult } from "@/lib/models"
-import { compareSurveys, type OverallComparison } from "@/lib/comparison-utils"
 import { SurveyComparison } from "@/components/survey-comparison"
-
-interface NeighboringLGAData {
-  lga: string
-  score: number
-  color: string
-}
-
-const getLSArColor = (score: number): string => {
-  if (score >= 80) return "#8b5cf6" // Purple - Excellent
-  if (score >= 60) return "#f37209" // Orange - Good
-  if (score >= 40) return "#2323dd" // blue - Satisfactory
-  if (score >= 20) return "#f3f728" // Yellow - poor
-  return "#ff0000" // red - Very poor
-}
-
-const getLSArRating = (score: number): string => {
-  if (score >= 80) return "Excellent"
-  if (score >= 60) return "Good"
-  if (score >= 40) return "Satisfactory"
-  if (score >= 20) return "Poor"
-  return "Very Poor"
-}
+import { SectionScoresCard } from "@/components/results/section-scores-card"
+import { OverallLSArCard } from "@/components/results/overall-lsar-card"
+import { NeighboringLGAsCard } from "@/components/results/neighboring-lgas-card"
+import { AnalysisCard } from "@/components/results/analysis-card"
+import { ResultsActions } from "@/components/results/results-actions"
+import { useResultsData } from "@/hooks/use-results-data"
+import { useNeighboringAdvisory } from "@/hooks/use-neighboring-advisory"
+import { getLSArColor, getLSArRating } from "@/lib/results-utils"
+import { generatePDFReport } from "@/lib/pdf-report-generator"
 
 export default function ResultsPage() {
   const router = useRouter()
@@ -47,16 +22,24 @@ export default function ResultsPage() {
   const [analysis, setAnalysis] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [sectionScores, setSectionScores] = useState<Record<string, number>>({})
   const [downloadingPdf, setDownloadingPdf] = useState(false)
-  const [neighboringLGAs, setNeighboringLGAs] = useState<NeighboringLGAData[]>([])
-  const [overallLSAr, setOverallLSAr] = useState<number>(0)
-  const [previousSurvey, setPreviousSurvey] = useState<SurveyResult | null>(null)
-  const [comparison, setComparison] = useState<OverallComparison | null>(null)
-  const [loadingPreviousSurvey, setLoadingPreviousSurvey] = useState(false)
-  const [neighboringAdvisory, setNeighboringAdvisory] = useState<string>("")
-  const [loadingAdvisory, setLoadingAdvisory] = useState(false)
 
+  const {
+    sectionScores,
+    overallLSAr,
+    neighboringLGAs,
+    previousSurvey,
+    comparison,
+    loadingPreviousSurvey,
+  } = useResultsData()
+
+  const { neighboringAdvisory, loadingAdvisory } = useNeighboringAdvisory(
+    neighboringLGAs,
+    overallLSAr,
+    selectedLga || ""
+  )
+
+  // Authentication check
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
     if (!isAuthenticated) {
@@ -79,134 +62,11 @@ export default function ResultsPage() {
     }
   }, [answers, selectedState, selectedLga, router])
 
-  useEffect(() => {
-    const scores: Record<string, number> = {}
-
-    sections.forEach((section) => {
-      const sectionQuestions = section.questions
-      let sectionTotal = 0
-      let answeredCount = 0
-
-      sectionQuestions.forEach((question) => {
-        if (answers[question.id] !== undefined) {
-          const selectedOptionId = answers[question.id] as string
-          const score = getScoreFromOptionId(selectedOptionId)
-          sectionTotal += score
-          answeredCount++
-          console.log(`Question ${question.id}: ${selectedOptionId} = ${score} points`)
-        }
-      })
-
-      const rawScore = answeredCount > 0 ? sectionTotal : 0
-      const finalScore = rawScore < 0 ? 0 : rawScore
-      const maxPossibleScore = sectionQuestions.length
-      const percentageScore = maxPossibleScore > 0 ? (finalScore / maxPossibleScore) * 100 : 0
-
-      scores[section.title] = Number.parseFloat(percentageScore.toFixed(1))
-      console.log(`[v0] Section ${section.title}: ${finalScore}/${maxPossibleScore} = ${percentageScore}%`)
-    })
-
-    setSectionScores(scores)
-  }, [answers])
-  console.log(sectionScores)
-
-  useEffect(() => {
-    if (Object.keys(sectionScores).length > 0) {
-      const scores = Object.values(sectionScores)
-      const average = scores.reduce((sum, score) => sum + score, 0) / scores.length
-      setOverallLSAr(Number.parseFloat(average.toFixed(1)))
-    }
-  }, [sectionScores])
-
-  useEffect(() => {
-    const getNeighboringLGAs = async () => {
-      if (!selectedLga || !selectedState || features.length === 0) {
-        console.log("[v0] Missing required data for neighboring LGAs:", {
-          selectedLga: !!selectedLga,
-          selectedState: !!selectedState,
-          featuresLength: features.length,
-        })
-        setNeighboringLGAs([])
-        return
-      }
-
-      console.log("[v0] Calculating neighboring LGAs for:", selectedLga)
-
-      const selectedFeature = features.find((f) => f.properties.shapeName === selectedLga)
-      if (!selectedFeature) {
-        console.log("[v0] Selected feature not found for:", selectedLga)
-        setNeighboringLGAs([])
-        return
-      }
-
-      const neighbors: string[] = []
-      for (const feature of features) {
-        const name = feature.properties.shapeName
-        if (name === selectedLga) continue
-
-        try {
-          const isAdjacent = booleanIntersects(
-            selectedFeature as TurfFeature<Polygon | MultiPolygon>,
-            feature as TurfFeature<Polygon | MultiPolygon>,
-          )
-
-          if (isAdjacent) {
-            neighbors.push(name)
-          }
-        } catch (error) {
-          console.error(`[v0] Error checking intersection for ${name}:`, error)
-        }
-      }
-
-      console.log("[v0] Found neighboring LGAs:", neighbors)
-
-      try {
-        const response = await fetch(`/api/analysis/lga-scores?state=${selectedState}`)
-        if (response.ok) {
-          const data = await response.json()
-          const neighboringData: NeighboringLGAData[] = neighbors.map((lga) => {
-            const lgaData = data.find((item: any) => item.lga === lga)
-            if (lgaData) {
-              const scores = Object.values(lgaData.averageScores) as number[]
-              const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length
-              return {
-                lga,
-                score: Number.parseFloat(avgScore.toFixed(1)),
-                color: getLSArColor(avgScore),
-              }
-            }
-            return {
-              lga,
-              score: 0,
-              color: "#e2e8f0",
-            }
-          })
-          setNeighboringLGAs(neighboringData)
-          console.log("[v0] Neighboring LGAs data:", neighboringData)
-        }
-      } catch (error) {
-        console.error("Error fetching neighboring LGA scores:", error)
-        setNeighboringLGAs([])
-      }
-    }
-
-    if (selectedLga && selectedState && features.length > 0) {
-      getNeighboringLGAs()
-    } else {
-      setNeighboringLGAs([])
-    }
-  }, [selectedLga, selectedState])
-
+  // Generate analysis
   const generateAnalysis = async () => {
     try {
       setLoading(true)
       setError(null)
-
-      console.log("Sending request to /api/analyze with data:", {
-        answersCount: Object.keys(answers).length,
-        state: selectedState,
-        lga: selectedLga,
-      })
 
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -220,10 +80,7 @@ export default function ResultsPage() {
         }),
       })
 
-      console.log("Response status:", response.status)
-
       const data = await response.json()
-      console.log("Response data:", data)
 
       if (!response.ok) {
         throw new Error(data.message || data.error || "Failed to generate analysis")
@@ -234,7 +91,6 @@ export default function ResultsPage() {
       }
 
       setAnalysis(data.analysis)
-
       await saveToDatabase()
     } catch (error: any) {
       console.error("Error generating analysis:", error)
@@ -278,333 +134,21 @@ export default function ResultsPage() {
   }
 
   const downloadReport = async () => {
+    if (!analysis || !selectedState || !selectedLga) return
+
+    setDownloadingPdf(true)
     try {
-      if (!analysis || !selectedState || !selectedLga) return
-
-      setDownloadingPdf(true)
-
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
+      await generatePDFReport({
+        selectedState,
+        selectedLga,
+        sectionScores,
+        overallLSAr,
+        comparison,
+        previousSurvey,
+        neighboringLGAs,
+        neighboringAdvisory,
+        analysis,
       })
-
-      doc.setFontSize(20)
-      doc.setTextColor(0, 51, 102)
-      doc.text(`Security Analysis Report`, 105, 20, { align: "center" })
-
-      doc.setFontSize(16)
-      doc.setTextColor(0, 0, 0)
-      doc.text(`${selectedLga} Local Government, ${selectedState} State`, 105, 30, { align: "center" })
-
-      doc.setFontSize(10)
-      doc.setTextColor(100, 100, 100)
-      const date = new Date().toLocaleDateString("en-NG", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-      doc.text(`Generated on: ${date}`, 105, 38, { align: "center" })
-
-      doc.setDrawColor(200, 200, 200)
-      doc.line(20, 42, 190, 42)
-
-      let currentY = 50
-
-      doc.setFontSize(14)
-      doc.setTextColor(0, 0, 0)
-      doc.text("Section Scores", 20, currentY)
-      currentY += 5
-
-      const scoresData = Object.entries(sectionScores).map(([title, score]) => [title, `${score}%`])
-
-      autoTable(doc, {
-        startY: currentY,
-        head: [["Section", "Score (%)"]],
-        body: scoresData,
-        headStyles: {
-          fillColor: [0, 51, 102],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-        },
-        alternateRowStyles: {
-          fillColor: [240, 240, 240],
-        },
-      })
-
-      currentY = (doc as any).lastAutoTable.finalY + 10
-
-      doc.setFontSize(14)
-      doc.setTextColor(0, 51, 102)
-      doc.text("Overall LSAr Rating", 20, currentY)
-      currentY += 8
-
-      const lsarColor = getLSArColor(overallLSAr)
-      const lsarRating = getLSArRating(overallLSAr)
-
-      doc.setFontSize(12)
-      doc.text(`Score: ${overallLSAr}% - ${lsarRating}`, 20, currentY)
-      currentY += 10
-
-      if (comparison && previousSurvey) {
-        if (currentY > 250) {
-          doc.addPage()
-          currentY = 20
-        }
-
-        doc.setFontSize(14)
-        doc.setTextColor(0, 51, 102)
-        doc.text("Survey Comparison", 20, currentY)
-        currentY += 5
-
-        doc.setFontSize(10)
-        doc.setTextColor(100, 100, 100)
-        const previousDate = new Date(previousSurvey.date).toLocaleDateString("en-NG", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
-        doc.text(`Comparison with survey conducted on: ${previousDate}`, 20, currentY)
-        currentY += 8
-
-        doc.setFontSize(12)
-        doc.setTextColor(0, 0, 0)
-        doc.text("Overall Performance", 20, currentY)
-        currentY += 6
-
-        const overallComparisonData = [
-          ["Previous LSAr Score", `${comparison.previousLSAr.toFixed(1)}%`],
-          ["Current LSAr Score", `${comparison.currentLSAr.toFixed(1)}%`],
-          [
-            "Change",
-            `${comparison.change > 0 ? "+" : ""}${comparison.change.toFixed(1)}% (${comparison.status.toUpperCase()})`,
-          ],
-        ]
-
-        autoTable(doc, {
-          startY: currentY,
-          body: overallComparisonData,
-          theme: "plain",
-          styles: {
-            fontSize: 10,
-            cellPadding: 2,
-          },
-        })
-
-        currentY = (doc as any).lastAutoTable.finalY + 5
-
-        doc.setFontSize(10)
-        const remarkLines = doc.splitTextToSize(comparison.remark, 170)
-        remarkLines.forEach((line: string) => {
-          if (currentY > 270) {
-            doc.addPage()
-            currentY = 20
-          }
-          doc.text(line, 20, currentY)
-          currentY += 5
-        })
-
-        currentY += 5
-
-        if (currentY > 250) {
-          doc.addPage()
-          currentY = 20
-        }
-
-        doc.setFontSize(12)
-        doc.setTextColor(0, 0, 0)
-        doc.text("Section-by-Section Analysis", 20, currentY)
-        currentY += 5
-
-        const sectionComparisonData = comparison.sectionComparisons.map((section) => [
-          section.sectionName,
-          `${section.previousScore.toFixed(1)}%`,
-          `${section.currentScore.toFixed(1)}%`,
-          `${section.change > 0 ? "+" : ""}${section.change.toFixed(1)}%`,
-          section.status.toUpperCase(),
-        ])
-
-        autoTable(doc, {
-          startY: currentY,
-          head: [["Section", "Previous", "Current", "Change", "Status"]],
-          body: sectionComparisonData,
-          headStyles: {
-            fillColor: [0, 51, 102],
-            textColor: [255, 255, 255],
-            fontStyle: "bold",
-            fontSize: 9,
-          },
-          styles: {
-            fontSize: 8,
-            cellPadding: 2,
-          },
-          alternateRowStyles: {
-            fillColor: [240, 240, 240],
-          },
-        })
-
-        currentY = (doc as any).lastAutoTable.finalY + 8
-
-        doc.setFontSize(11)
-        doc.text("Detailed Section Remarks", 20, currentY)
-        currentY += 6
-
-        comparison.sectionComparisons.forEach((section) => {
-          if (currentY > 260) {
-            doc.addPage()
-            currentY = 20
-          }
-
-          doc.setFontSize(10)
-          doc.setFont(undefined, "bold")
-          doc.text(section.sectionName, 20, currentY)
-          currentY += 5
-
-          doc.setFont(undefined, "normal")
-          doc.setFontSize(9)
-          const sectionRemarkLines = doc.splitTextToSize(section.remark, 170)
-          sectionRemarkLines.forEach((line: string) => {
-            if (currentY > 270) {
-              doc.addPage()
-              currentY = 20
-            }
-            doc.text(line, 20, currentY)
-            currentY += 4
-          })
-
-          currentY += 3
-        })
-
-        currentY += 5
-      }
-
-      if (neighboringLGAs.length > 0) {
-        if (currentY > 250) {
-          doc.addPage()
-          currentY = 20
-        }
-
-        doc.setFontSize(14)
-        doc.text("Neighboring LGAs Comparison", 20, currentY)
-        currentY += 5
-
-        const neighborData = neighboringLGAs.map((neighbor) => [
-          neighbor.lga,
-          neighbor.score > 0 ? `${neighbor.score}%` : "No data",
-          neighbor.score > 0 ? getLSArRating(neighbor.score) : "N/A",
-        ])
-
-        autoTable(doc, {
-          startY: currentY,
-          head: [["LGA", "Score (%)", "Rating"]],
-          body: neighborData,
-          headStyles: {
-            fillColor: [0, 51, 102],
-            textColor: [255, 255, 255],
-            fontStyle: "bold",
-          },
-          alternateRowStyles: {
-            fillColor: [240, 240, 240],
-          },
-        })
-
-        currentY = (doc as any).lastAutoTable.finalY + 10
-
-        if (neighboringAdvisory && neighboringLGAs.filter((lga) => lga.score > 0).length > 0) {
-          if (currentY > 250) {
-            doc.addPage()
-            currentY = 20
-          }
-
-          doc.setFontSize(12)
-          doc.setTextColor(0, 0, 0)
-          doc.setFont(undefined, "bold")
-          doc.text("Regional Security Advisory", 20, currentY)
-          currentY += 6
-
-          doc.setFont(undefined, "normal")
-          doc.setFontSize(10)
-          doc.setTextColor(60, 60, 60)
-          
-          const advisoryLines = doc.splitTextToSize(neighboringAdvisory, 170)
-          advisoryLines.forEach((line: string) => {
-            if (currentY > 270) {
-              doc.addPage()
-              currentY = 20
-            }
-            doc.text(line, 20, currentY)
-            currentY += 5
-          })
-
-          currentY += 5
-        }
-      }
-
-      if (currentY > 250) {
-        doc.addPage()
-        currentY = 20
-      }
-
-      doc.setFontSize(14)
-      doc.text("Detailed Analysis", 20, currentY)
-      currentY += 8
-
-      const analysisLines = analysis.split("\n")
-
-      analysisLines.forEach((line) => {
-        if (currentY > 270) {
-          doc.addPage()
-          currentY = 20
-        }
-
-        if (line.startsWith("# ")) {
-          doc.setFontSize(16)
-          doc.setTextColor(0, 51, 102)
-          doc.text(line.replace("# ", ""), 20, currentY)
-          currentY += 8
-        } else if (line.startsWith("## ")) {
-          doc.setFontSize(14)
-          doc.setTextColor(0, 51, 102)
-          doc.text(line.replace("## ", ""), 20, currentY)
-          currentY += 7
-        } else if (line.startsWith("### ")) {
-          doc.setFontSize(12)
-          doc.setTextColor(0, 51, 102)
-          doc.text(line.replace("### ", ""), 20, currentY)
-          currentY += 6
-        } else if (line.startsWith("- ")) {
-          doc.setFontSize(10)
-          doc.setTextColor(0, 0, 0)
-          doc.text("•", 20, currentY)
-          doc.text(line.replace("- ", ""), 25, currentY)
-          currentY += 5
-        } else if (line.trim() === "") {
-          currentY += 3
-        } else {
-          doc.setFontSize(10)
-          doc.setTextColor(0, 0, 0)
-
-          const textLines = doc.splitTextToSize(line, 170)
-          textLines.forEach((textLine: string) => {
-            if (currentY > 270) {
-              doc.addPage()
-              currentY = 20
-            }
-            doc.text(textLine, 20, currentY)
-            currentY += 5
-          })
-        }
-      })
-
-      const pageCount = doc.getNumberOfPages()
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i)
-        doc.setFontSize(8)
-        doc.setTextColor(100, 100, 100)
-        doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: "center" })
-      }
-
-      doc.save(`${selectedLga}_Security_Analysis.pdf`)
     } catch (error) {
       console.error("Error generating PDF:", error)
       alert("Failed to generate PDF. Please try again.")
@@ -612,115 +156,6 @@ export default function ResultsPage() {
       setDownloadingPdf(false)
     }
   }
-
-  useEffect(() => {
-    const fetchPreviousSurvey = async () => {
-      if (!selectedState || !selectedLga) return
-
-      try {
-        setLoadingPreviousSurvey(true)
-        const response = await fetch(`/api/survey-results?state=${selectedState}&lga=${selectedLga}`)
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch previous surveys")
-        }
-
-        const data: SurveyResult[] = await response.json()
-
-        if (data && data.length > 0) {
-          // Sort by date and get the most recent
-          const sortedSurveys = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          setPreviousSurvey(sortedSurveys[0])
-        } else {
-          setPreviousSurvey(null)
-        }
-      } catch (error: any) {
-        console.error("Error fetching previous survey:", error)
-        setPreviousSurvey(null)
-      } finally {
-        setLoadingPreviousSurvey(false)
-      }
-    }
-
-    fetchPreviousSurvey()
-  }, [selectedState, selectedLga])
-
-  useEffect(() => {
-    if (previousSurvey && Object.keys(sectionScores).length > 0 && overallLSAr > 0) {
-      const currentSurvey: SurveyResult = {
-        state: selectedState || "",
-        lga: selectedLga || "",
-        date: new Date(),
-        sectionScores,
-        answers,
-        lsarScore: overallLSAr,
-        colorCoding: {
-          code: "",
-          color: "",
-          label: "",
-        },
-      }
-
-      const comparisonResult = compareSurveys(previousSurvey, currentSurvey)
-      setComparison(comparisonResult)
-    } else {
-      setComparison(null)
-    }
-  }, [previousSurvey, sectionScores, overallLSAr, selectedState, selectedLga, answers])
-
-  useEffect(() => {
-    const generateNeighboringAdvisory = async () => {
-      const lgasWithData = neighboringLGAs.filter((lga) => lga.score > 0)
-      
-      if (lgasWithData.length === 0) {
-        setNeighboringAdvisory("")
-        return
-      }
-
-      try {
-        setLoadingAdvisory(true)
-        
-        const lgaPerformanceData = lgasWithData.map((lga) => ({
-          name: lga.lga,
-          score: lga.score,
-          rating: getLSArRating(lga.score)
-        }))
-
-        const currentLgaData = {
-          name: selectedLga,
-          score: overallLSAr,
-          rating: getLSArRating(overallLSAr)
-        }
-
-        const response = await fetch("/api/generate-neighboring-advisory", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            currentLga: currentLgaData,
-            neighboringLGAs: lgaPerformanceData,
-          }),
-        })
-
-        if (!response.ok) {
-          throw new Error("Failed to generate advisory")
-        }
-
-        const data = await response.json()
-        setNeighboringAdvisory(data.advisory)
-      } catch (error) {
-        console.error("Error generating neighboring advisory:", error)
-        setNeighboringAdvisory("")
-      } finally {
-        setLoadingAdvisory(false)
-      }
-    }
-
-    if (neighboringLGAs.length > 0 && overallLSAr > 0 && selectedLga) {
-      generateNeighboringAdvisory()
-    }
-  }, [neighboringLGAs, overallLSAr, selectedLga])
 
   return (
     <>
@@ -735,208 +170,46 @@ export default function ResultsPage() {
           </div>
 
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Section Scores</CardTitle>
-                <CardDescription>Average scores for each section of the survey (0-100% scale)</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {Object.entries(sectionScores).map(([section, score]) => (
-                    <div key={section}>
-                      <div className="flex justify-between mb-1">
-                        <span className="font-medium">{section}</span>
-                        <span className="font-medium">{score}%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                        <div className="bg-primary h-2.5 rounded-full" style={{ width: `${score}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <SectionScoresCard sectionScores={sectionScores} />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Overall LSAr Rating</CardTitle>
-                <CardDescription>Local Security Architecture Rating for {selectedLga}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-4">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                    style={{ backgroundColor: getLSArColor(overallLSAr) }}
-                  >
-                    {overallLSAr}%
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold" style={{ color: getLSArColor(overallLSAr) }}>
-                      {getLSArRating(overallLSAr)}
-                    </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      Overall security architecture rating
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <OverallLSArCard
+              overallLSAr={overallLSAr}
+              selectedLga={selectedLga || ""}
+              getLSArColor={getLSArColor}
+              getLSArRating={getLSArRating}
+            />
 
             {!loadingPreviousSurvey && comparison && previousSurvey && (
               <SurveyComparison comparison={comparison} previousSurveyDate={previousSurvey.date} />
             )}
 
-            {neighboringLGAs.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Neighboring LGAs Comparison</CardTitle>
-                  <CardDescription>LSAr scores of surrounding local governments</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={neighboringLGAs}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="lga" angle={-45} textAnchor="end" height={80} fontSize={12} />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="score" name="LSAr Score (%)">
-                          {neighboringLGAs.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  
-                  {neighboringLGAs.filter((lga) => lga.score > 0).length > 0 && (
-                    <div className="mt-6 pt-6 border-t">
-                      <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full"></span>
-                        Regional Security Advisory
-                      </h4>
-                      {loadingAdvisory ? (
-                        <div className="flex items-center gap-2 text-sm text-slate-500">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Analyzing neighboring LGAs performance...</span>
-                        </div>
-                      ) : neighboringAdvisory ? (
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
-                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                            {neighboringAdvisory}
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            <NeighboringLGAsCard
+              neighboringLGAs={neighboringLGAs}
+              neighboringAdvisory={neighboringAdvisory}
+              loadingAdvisory={loadingAdvisory}
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Analysis</CardTitle>
-                <CardDescription>AI-generated analysis based on your survey responses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                    <p className="text-slate-500 dark:text-slate-400">Generating your security analysis...</p>
-                  </div>
-                ) : error ? (
-                  <div className="space-y-4">
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                    <div className="flex justify-center">
-                      <Button onClick={generateAnalysis} className="mt-4">
-                        <RefreshCcw className="mr-2 h-4 w-4" />
-                        Try Again
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="prose dark:prose-invert max-w-none">
-                    {analysis ? (
-                      analysis.split("\n").map((line, index) => {
-                        if (line.startsWith("# ")) {
-                          return (
-                            <h1 key={index} className="text-2xl font-bold mt-6 mb-4">
-                              {line.replace("# ", "")}
-                            </h1>
-                          )
-                        } else if (line.startsWith("## ")) {
-                          return (
-                            <h2 key={index} className="text-xl font-bold mt-5 mb-3">
-                              {line.replace("## ", "")}
-                            </h2>
-                          )
-                        } else if (line.startsWith("### ")) {
-                          return (
-                            <h3 key={index} className="text-lg font-bold mt-4 mb-2">
-                              {line.replace("### ", "")}
-                            </h3>
-                          )
-                        } else if (line.startsWith("- ")) {
-                          return (
-                            <li key={index} className="ml-4">
-                              {line.replace("- ", "")}
-                            </li>
-                          )
-                        } else if (line.trim() === "") {
-                          return <br key={index} />
-                        } else {
-                          return (
-                            <p key={index} className="my-2">
-                              {line}
-                            </p>
-                          )
-                        }
-                      })
-                    ) : (
-                      <p className="text-center text-slate-500 dark:text-slate-400">
-                        No analysis generated. Please try again.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <AnalysisCard
+              loading={loading}
+              error={error}
+              analysis={analysis}
+              onRetry={generateAnalysis}
+            />
           </div>
 
-          <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => router.push("/survey")}>
-              Back to Survey
-            </Button>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  localStorage.removeItem("surveyAnswers")
-                  localStorage.removeItem("currentSectionIndex")
-                  router.push("/select-location")
-                }}
-              >
-                Start New Survey
-              </Button>
-              <Button onClick={downloadReport} disabled={loading || !!error || !analysis || downloadingPdf}>
-                {downloadingPdf ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download PDF Report
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
+          <ResultsActions
+            loading={loading}
+            error={error}
+            analysis={analysis}
+            downloadingPdf={downloadingPdf}
+            onBackToSurvey={() => router.push("/survey")}
+            onStartNewSurvey={() => {
+              localStorage.removeItem("surveyAnswers")
+              localStorage.removeItem("currentSectionIndex")
+              router.push("/select-location")
+            }}
+            onDownloadReport={downloadReport}
+          />
         </div>
       </div>
     </>

@@ -1,5 +1,5 @@
 import type React from "react"
-import { Poppins, Raleway } from "next/font/google"
+import { Poppins } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
 import "./globals.css"

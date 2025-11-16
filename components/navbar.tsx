@@ -28,8 +28,6 @@ export function Navbar() {
   const navigationLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/select-location", label: "Survey", icon: Map },
-    { href: "/analysis", label: "State Analysis", icon: BarChart3 },
-    { href: "/local-analysis", label: "LGA Analysis", icon: BarChart3 },
   ]
 
   const NavLinks = ({ className, onClick }: { className?: string; onClick?: () => void }) => (

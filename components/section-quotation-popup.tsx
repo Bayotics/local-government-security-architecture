@@ -76,7 +76,7 @@ export function SectionQuotationPopup({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="text-2xl md:text-3xl font-bold text-center mb-8 text-white text-balance"
+                    className="text-2xl md:text-3xl font-semibold text-center mb-8 text-white text-balance"
                   >
                     {sectionTitle}
                   </motion.h2>
