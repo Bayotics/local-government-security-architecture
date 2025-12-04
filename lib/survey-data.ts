@@ -41,7 +41,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-2",
-        text: "Does the LG have a full-fledged Dept of Security?",
+        text: "Does the LG have a full-fledged Department of Security that attends to security alerts?",
         section: "decision-making",
         options: [
           { id: "d2-1", text: "Yes", score: 1 },
@@ -51,7 +51,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-3",
-        text: "Is there a standing Committee for security decision making in LGA?",
+        text: "Is there a standing committee responsible for security decision making in the LGA?",
         section: "decision-making",
         options: [
           { id: "d3-1", text: "Yes", score: 1 },
@@ -61,7 +61,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-4",
-        text: "Are there community reps in the Committee such as traditional rulers, community/youth/women leaders, faith based organisations, NGOs?",
+        text: "Are there community representatives in this Committee such as traditional rulers, community/youth/women leaders, professional groups, faith-based organisations, NGOs, ?",
         section: "decision-making",
         options: [
           { id: "d4-1", text: "Yes", score: 1 },
@@ -71,7 +71,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-5",
-        text: "How often does the Security Committee meet?",
+        text: "How often does this Committee meet?",
         section: "decision-making",
         options: [
           { id: "d5-1", text: "Daily", score: 1 },
@@ -84,7 +84,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-6",
-        text: "Does LG have security professionals to analyse information before security decisions are made?",
+        text: "Does the LG have security Adviser/professionals to analyse information before security decisions are made?",
         section: "decision-making",
         options: [
           { id: "d6-1", text: "Yes", score: 1 },
@@ -94,7 +94,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-7",
-        text: "Is LGA Chairman solely responsible for security decision making in LGA?",
+        text: "Is the LGA Chairman responsible for security decision making in the LGA?",
         section: "decision-making",
         options: [
           { id: "d7-1", text: "Yes", score: 1 },
@@ -115,7 +115,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-9",
-        text: "Does LG Chairman have to clear security decisions from a higher authority before implementation?",
+        text: "Does the Local Government Chairman have to clear security decisions from a higher authority before implementation? ",
         section: "decision-making",
         options: [
           { id: "d9-1", text: "No", score: 1 },
@@ -125,7 +125,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-10",
-        text: "Can LG Chairman instruct the Police and/or security agencies in the locality on security decisions made?",
+        text: "Can the LG Chairman instruct the Police and/or security agencies in the locality on security decisions made?",
         section: "decision-making",
         options: [
           { id: "d10-1", text: "Yes", score: 1 },
@@ -272,7 +272,7 @@ export const sections: Section[] = [
       },
       {
         id: "intelligence-3",
-        text: "Does the LG have its own independent intelligence gathering organisation?",
+        text: "Does the LG have its own independent intelligence gathering organization/system?",
         section: "intelligence",
         options: [
           { id: "in3-1", text: "Yes", score: 1 },
@@ -292,7 +292,7 @@ export const sections: Section[] = [
       },
       {
         id: "intelligence-5",
-        text: "Is security intelligence in the LGA enabled by technology such as drones, CCTV?",
+        text: "Is security intelligence gathering in the LGA enabled by equipment/technology such as vehicles, drones, CCTV, computers, Internet, database, or AI? ",
         section: "intelligence",
         options: [
           { id: "in5-1", text: "Yes", score: 1 },
@@ -343,7 +343,7 @@ export const sections: Section[] = [
       },
       {
         id: "intelligence-10",
-        text: "Does the LG have an electronic medium that covers the entire local government area?",
+        text: "Does the LG have an electronic medium for early warning that covers the entire local government area? ",
         section: "intelligence",
         options: [
           { id: "in10-1", text: "Yes", score: 1 },
@@ -432,7 +432,7 @@ export const sections: Section[] = [
       },
       {
         id: "resources-8",
-        text: "Does the LG always get its budget for security?",
+        text: "Does the LG always get cashbacking for its security budget?",
         section: "resources",
         options: [
           { id: "r8-1", text: "Yes", score: 1 },
@@ -490,7 +490,7 @@ export const sections: Section[] = [
       },
       {
         id: "institutions-3",
-        text: "Does the LG have an independent security outfit by any designation such as vigilante, community watch etc?",
+        text: "Does the LG have an independent security outfit by any designation such as vigilante, community watch, volunteers, etc?",
         section: "institutions",
         options: [
           { id: "inst3-1", text: "Yes", score: 1 },
@@ -608,7 +608,7 @@ export const sections: Section[] = [
       },
       {
         id: "evaluation-4",
-        text: "Does the LG conduct security surveys?",
+        text: "	Does the LG conduct security surveys and security needs assessment?",
         section: "evaluation",
         options: [
           { id: "e4-1", text: "Yes", score: 1 },
@@ -618,7 +618,7 @@ export const sections: Section[] = [
       },
       {
         id: "evaluation-5",
-        text: "Does the LG conduct security need assessment?",
+        text: "Do people trust that the local government can protect them?",
         section: "evaluation",
         options: [
           { id: "e5-1", text: "Yes", score: 1 },

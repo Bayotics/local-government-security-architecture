@@ -263,7 +263,7 @@ export function StateLGAMap({
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>{selectedState} State Security Map</CardTitle>
+        <CardTitle>{selectedState} State Security LGAs Data</CardTitle>
         <CardDescription>{selectedLga} and surrounding local governments</CardDescription>
       </CardHeader>
       <CardContent>
@@ -372,7 +372,7 @@ export function StateLGAMap({
             <div className="mt-8">
               {/* GeoJSON Map */}
               <div className="mt-6">
-                <div className="text-sm font-medium mb-2">Map View</div>
+                <div className="text-sm font-medium mb-2">Map View of Selected and Surrounding LGAs (click to show)</div>
                 <MapContainer
                   center={[9.082, 8.6753]} // Nigeria center
                   zoom={6}

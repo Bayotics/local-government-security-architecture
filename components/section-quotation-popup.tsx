@@ -2,24 +2,19 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Quote, Sparkles } from 'lucide-react'
-import { getQuotationBySection } from "@/lib/sections-quotation" // Import quotation fetching function
+import { Quote, Sparkles } from "lucide-react"
+import { getQuotationBySection } from "@/lib/sections-quotation"
 
 interface SectionQuotationPopupProps {
   isOpen: boolean
   sectionTitle: string
-  sectionId: string // Changed from quotation to sectionId
+  sectionId: string
   onContinue: () => void
 }
 
-export function SectionQuotationPopup({
-  isOpen,
-  sectionTitle,
-  sectionId, // Use sectionId instead of quotation
-  onContinue,
-}: SectionQuotationPopupProps) {
-  const quotation = getQuotationBySection(sectionId) // Fetch quotation from section-quotations.ts
-  
+export function SectionQuotationPopup({ isOpen, sectionTitle, sectionId, onContinue }: SectionQuotationPopupProps) {
+  const quotationData = getQuotationBySection(sectionId)
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -76,7 +71,7 @@ export function SectionQuotationPopup({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="text-2xl md:text-3xl font-semibold text-center mb-8 text-white text-balance"
+                    className="text-2xl md:text-3xl font-bold text-center mb-8 text-white text-balance"
                   >
                     {sectionTitle}
                   </motion.h2>
@@ -93,21 +88,40 @@ export function SectionQuotationPopup({
                     </div>
                   </motion.div>
 
-                  {/* Quotation */}
+                  {quotationData?.author && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="text-sm md:text-base text-emerald-400 text-center font-semibold mb-3"
+                    >
+                      {quotationData.author}
+                    </motion.p>
+                  )}
+
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-base md:text-lg text-slate-300 text-center leading-relaxed mb-10 text-pretty px-4"
+                    transition={{ delay: 0.55 }}
+                    className="text-base md:text-lg text-emerald-300 text-center leading-relaxed mb-6 text-pretty px-4 italic"
                   >
-                    {quotation}
+                    {quotationData?.quotation}
+                  </motion.p>
+
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="text-sm md:text-base text-slate-300 text-center leading-relaxed mb-10 text-pretty px-4"
+                  >
+                    {quotationData?.subQuotation}
                   </motion.p>
 
                   {/* Continue Button */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.65 }}
                     className="flex justify-center"
                   >
                     <Button

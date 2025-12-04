@@ -117,7 +117,7 @@ const LandingPage: FC = () => {
                       repeatType: "reverse",
                     }}
                   >
-                    National Security Asessment & <span className="text-[#64FFDA]">Data-Driven Insights</span>
+                    Local Security Architecture <span className="text-[#64FFDA]">Tracker</span>
                   </motion.h1>
                   <p className="text-xl lg:text-2xl text-gray-300 mt-6 text-pretty">for Every Local Government</p>
                 </motion.div>
@@ -285,7 +285,7 @@ const LandingPage: FC = () => {
                     </div>
                   </div>
                   <h3 className="text-2xl font-extralight mb-4">{feature.title}</h3>
-                  <p className="text-gray-400 leading-relaxed font-thin">{feature.description}</p>
+                  <p className="text-gray-400 leading-relaxed font-extralight">{feature.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -326,8 +326,8 @@ const LandingPage: FC = () => {
                   className="bg-[#0A192F] border border-[#64FFDA]/20 rounded-lg p-6 hover:border-[#64FFDA]/50 transition-all"
                 >
                   <dimension.icon className="h-6 w-6 text-[#64FFDA] mb-3" />
-                  <h4 className="text-lg font-thin mb-2">{dimension.title}</h4>
-                  <p className="text-sm text-gray-400">{dimension.desc}</p>
+                  <h4 className="text-lg font-extralight mb-2">{dimension.title}</h4>
+                  <p className="text-sm text-gray-100 font-thin">{dimension.desc}</p>
                 </motion.div>
               ))}
             </div>

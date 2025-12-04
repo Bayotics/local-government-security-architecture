@@ -15,7 +15,7 @@ export function AnalysisCard({ loading, error, analysis, onRetry }: AnalysisCard
     <Card>
       <CardHeader>
         <CardTitle>Security Analysis</CardTitle>
-        <CardDescription>AI-generated analysis based on your survey responses</CardDescription>
+        <CardDescription>Analysis based on your survey responses</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (

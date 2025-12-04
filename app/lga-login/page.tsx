@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Loader2, Shield, ArrowLeft } from 'lucide-react'
+import { AlertCircle, Loader2, Shield, ArrowLeft } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -24,7 +24,7 @@ export default function LGALogin() {
   const [maskedPhone, setMaskedPhone] = useState("")
 
   const filteredLGAs = selectedState
-    ? nigerianLGAs.filter((lga) => lga.state_id === parseInt(selectedState))
+    ? nigerianLGAs.filter((lga) => lga.state_id === Number.parseInt(selectedState))
     : []
 
   const handleSelectLGA = async () => {
@@ -84,20 +84,16 @@ export default function LGALogin() {
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          stateId: selectedState, 
-          lgaId: selectedLGA, 
-          otp 
+        body: JSON.stringify({
+          stateId: selectedState,
+          lgaId: selectedLGA,
+          otp,
         }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        if (data.error === "device_mismatch") {
-          setError(data.message)
-          return
-        }
         throw new Error(data.error || "Failed to verify OTP")
       }
 
@@ -106,7 +102,7 @@ export default function LGALogin() {
       localStorage.setItem("lgaName", data.lgaName)
       localStorage.setItem("stateName", data.stateName)
       localStorage.setItem("isAuthenticated", "true")
-      
+
       localStorage.setItem("selectedState", data.stateName)
       localStorage.setItem("selectedLga", data.lgaName)
       localStorage.setItem("preSelectedStateId", data.stateId.toString())
@@ -146,20 +142,10 @@ export default function LGALogin() {
           className="text-center mb-8"
         >
           <div className="flex justify-center mb-4">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={80}
-              height={80}
-              className="rounded-full"
-            />
+            <Image src="/logo.png" alt="Logo" width={80} height={80} className="rounded-full" />
           </div>
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            LGA Official Access
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Secure authentication for local government officials
-          </p>
+          <h1 className="text-4xl font-bold gradient-text mb-2">LGA Official Access</h1>
+          <p className="text-muted-foreground mt-2">Secure authentication for local government officials</p>
         </motion.div>
 
         <motion.div
@@ -174,9 +160,7 @@ export default function LGALogin() {
                 {step === "select" ? "Select Your LGA" : "Enter OTP"}
               </CardTitle>
               <CardDescription>
-                {step === "select"
-                  ? "Choose your state and local government"
-                  : `Enter the OTP sent to ${maskedPhone}`}
+                {step === "select" ? "Choose your state and local government" : `Enter the OTP sent to ${maskedPhone}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -207,11 +191,7 @@ export default function LGALogin() {
 
                   <div>
                     <Label htmlFor="lga">Local Government</Label>
-                    <Select 
-                      value={selectedLGA} 
-                      onValueChange={setSelectedLGA}
-                      disabled={!selectedState}
-                    >
+                    <Select value={selectedLGA} onValueChange={setSelectedLGA} disabled={!selectedState}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select LGA" />
                       </SelectTrigger>
@@ -232,18 +212,14 @@ export default function LGALogin() {
                     <Input
                       id="otp"
                       type="text"
-                      placeholder="Enter 8-digit OTP"
+                      placeholder="Enter 6-digit OTP"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                      maxLength={8}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      maxLength={6}
                       className="text-center text-2xl tracking-widest"
                     />
                   </div>
-                  <Button
-                    variant="link"
-                    onClick={() => setStep("select")}
-                    className="w-full"
-                  >
+                  <Button variant="link" onClick={() => setStep("select")} className="w-full">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to LGA Selection
                   </Button>

@@ -2,42 +2,60 @@ export interface SectionQuotation {
   sectionId: string
   title: string
   quotation: string
+  subQuotation: string
+  author?: string // Optional author field for sections with quotes from specific people
 }
 
 export const sectionQuotations: SectionQuotation[] = [
   {
     sectionId: "decision-making",
     title: "Local Security Decision Making Authority",
-    quotation: "Effective security governance begins at grassroots level where local authorities understand community-specific threats. When local government chairmen collaborate with traditional rulers and security professionals in structured committees, they create responsive security architecture. This section examines whether your local government has established necessary authority structures and community partnerships for proactive governance."
+    author: "Sun Tzu", // Added author for section 1
+    quotation:
+      "In the midst of chaos, there is also opportunity and security decisions often arise from crises that require strategic clarity.",
+    subQuotation:
+      "This tracker would seek answers to the following questions regarding local security decision making:",
   },
   {
     sectionId: "instruments",
     title: "Development of Local Security Instruments",
-    quotation: "Laws and regulations form the legal backbone of effective security systems. This section evaluates whether your local government has developed comprehensive byelaws, standard operating procedures, and agreements that guide security provision. Proper documentation and regulatory development ensure security provision is systematic, transparent, and sustainable rather than ad-hoc."
+    quotation: "Security regulations are not barriers; they are the guardrails that keep progress on the right path",
+    subQuotation:
+      "This tracker would seek answers to the following questions regarding development of local security instruments:",
   },
   {
     sectionId: "intelligence",
     title: "Local Security Intelligence and Early Warning",
-    quotation: "Prevention requires robust intelligence gathering and early warning systems. This section assesses whether your local government has established mechanisms for collecting and analyzing security intelligence through formal agencies and community networks. Integration of traditional sources with modern technology creates comprehensive situational awareness, transforming security from reactive crisis management to proactive prevention."
+    quotation: "The art of intelligence is not just in knowing but in acting before it is too late",
+    subQuotation:
+      "This tracker would seek answers to the following questions regarding local security intelligence gathering and early warning:",
   },
   {
     sectionId: "resources",
     title: "Dedicated Resources for Local Security Provision",
-    quotation: "Security requires sustained investment in personnel, equipment, and operations. This section examines whether your local government conducts systematic budgeting that allocates sufficient resources based on formal assessments. Diversified funding sources and transparent budgeting processes demonstrate fiscal accountability, ensuring security investments align with community needs."
+    quotation:
+      "Safety and security do not just happen; they are the result of collective consensus and public investment",
+    subQuotation:
+      "This tracker would seek answers to the following questions regarding dedicated resources for local security provision",
   },
   {
     sectionId: "institutions",
     title: "Local Security Intervention Institutions and Mechanisms",
-    quotation: "Policies are meaningless without capable institutions to implement them. This section evaluates whether your local government has established security outfits, community watch programs, and partnerships with formal agencies for comprehensive coverage. Beyond security responses, effective governments implement socio-economic programs addressing root causes of insecurity like poverty and unemployment."
+    quotation:
+      "A secure society is one where institutions are strong, responses are swift, and the people trust in the shield that protects them.",
+    subQuotation:
+      "This tracker would seek answers to the following questions regarding local security response institutions and mechanisms:",
   },
   {
     sectionId: "evaluation",
     title: "Local Security Performance Measurement and Evaluation",
-    quotation: "Continuous improvement requires systematic measurement and evaluation against established benchmarks. This section assesses whether your local government has developed performance indicators, conducts regular assessments, and maintains comprehensive databases. Regular performance measurement transforms security management from intuition-based responses to data-driven continuous improvement cycles."
-  }
+    author: "Peter Drucker", // Added author for section 6
+    quotation: "If you can't measure it, you can't improve it",
+    subQuotation:
+      "This tracker would seek answers to the following questions regarding local security performance monitoring, measurement, evaluation and Improvement",
+  },
 ]
 
-export function getQuotationBySection(sectionId: string): string {
-  const quotation = sectionQuotations.find(q => q.sectionId === sectionId)
-  return quotation?.quotation || ""
+export function getQuotationBySection(sectionId: string): SectionQuotation | undefined {
+  return sectionQuotations.find((q) => q.sectionId === sectionId)
 }
