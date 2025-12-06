@@ -11,7 +11,7 @@ import { features } from "@/lgaShapes"
 import { useMap } from "react-leaflet"
 import { useMemo } from "react"
 import L from "leaflet"
-import booleanIntersects from "@turf/boolean-intersects"
+import {booleanIntersects} from "@turf/turf"
 import type { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
 import { Button } from "@/components/ui/button"
 
