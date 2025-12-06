@@ -366,10 +366,10 @@ const LandingPage: FC = () => {
                   <div className="space-y-6">
                     <span className="inline-flex items-center gap-2 text-sm text-[#64FFDA] font-medium">
                       <div className="w-2 h-2 rounded-full bg-[#64FFDA]"></div>
-                      Authoring Tool
+                      About
                     </span>
-                    <h2 className="text-4xl lg:text-5xl font-bold leading-tight">
-                      Simplify Security Assessment for your team
+                    <h2 className="text-4xl lg:text-5xl font-normal leading-tight">
+                      Accurate Security Assessment for every LGA
                     </h2>
                     <p className="text-lg text-gray-400 leading-relaxed">
                       {shortAboutText}
