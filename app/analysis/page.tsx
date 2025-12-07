@@ -6,12 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { useRouter } from 'next/navigation'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Cell } from "recharts"
-import { Loader2, AlertTriangle, TrendingUp, Users, MapPin } from 'lucide-react'
+import { useRouter } from "next/navigation"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from "recharts"
+import { Loader2, AlertTriangle, TrendingUp, Users, MapPin } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/newChart"
 import { sections, colorCoding } from "@/lib/survey-data"
+import LGARatingsMap from "@/components/lga-ratings-map"
+import LGARankingsList from "@/components/lga-rankings-list"
 
 interface StateScore {
   state: string
@@ -27,17 +29,24 @@ interface StateScore {
   }
 }
 
+interface LGAScore {
+  lga: string
+  score: number
+}
+
 export default function AnalysisPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [stateScores, setStateScores] = useState<StateScore[]>([])
+  const [lgaScores, setLgaScores] = useState<LGAScore[]>([])
   const [selectedSection, setSelectedSection] = useState<string>("decision-making")
-  const [activeTab, setActiveTab] = useState("lsar")
+  const [activeTab, setActiveTab] = useState("lga-ratings")
 
   useEffect(() => {
     checkAuth()
     fetchStateScores()
+    fetchLgaScores()
   }, [router])
 
   const checkAuth = async () => {
@@ -69,6 +78,28 @@ export default function AnalysisPage() {
     } catch (error: any) {
       console.error("Error fetching state scores:", error)
       setError(error.message || "Failed to fetch state scores. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchLgaScores = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch("/api/analysis/lga-scores")
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || data.error || "Failed to fetch LGA scores")
+      }
+
+      const data = await response.json()
+      setLgaScores(data)
+    } catch (error: any) {
+      console.error("Error fetching LGA scores:", error)
+      setError(error.message || "Failed to fetch LGA scores. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -162,12 +193,15 @@ export default function AnalysisPage() {
           </motion.div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 mb-6">
+            <TabsList className="grid grid-cols-4 mb-6">
+              <TabsTrigger value="lga-ratings">LGA Ratings</TabsTrigger>
               <TabsTrigger value="lsar">LSAr Analysis</TabsTrigger>
               <TabsTrigger value="section">Section Analysis</TabsTrigger>
-              <TabsTrigger value="comparison">State Comparison</TabsTrigger>
+              <TabsTrigger value="comparison">LGA Ranking</TabsTrigger>
             </TabsList>
-
+            <TabsContent value="lga-ratings">
+              <LGARatingsMap />
+            </TabsContent>
             <TabsContent value="lsar">
               <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
                 <CardHeader>
@@ -231,7 +265,7 @@ export default function AnalysisPage() {
                             label={{ value: "LSAr Score (%)", angle: -90, position: "insideLeft" }}
                           />
                           <ChartTooltip
-                            content={(
+                            content={
                               <ChartTooltipContent
                                 formatter={(value, name, props) => {
                                   if (name === "lsarScore") {
@@ -251,7 +285,7 @@ export default function AnalysisPage() {
                                   return [value, name]
                                 }}
                               />
-                            )}
+                            }
                           />
                           <Bar dataKey="lsarScore" name="LSAr Score" radius={[4, 4, 0, 0]}>
                             {lsarChartData.map((entry, index) => (
@@ -320,7 +354,7 @@ export default function AnalysisPage() {
                           <XAxis dataKey="state" angle={-45} textAnchor="end" height={70} />
                           <YAxis domain={[0, 100]} label={{ value: "Score (%)", angle: -90, position: "insideLeft" }} />
                           <ChartTooltip
-                            content={(
+                            content={
                               <ChartTooltipContent
                                 formatter={(value, name, props) => {
                                   if (name === "score")
@@ -328,7 +362,7 @@ export default function AnalysisPage() {
                                   return [value, name]
                                 }}
                               />
-                            )}
+                            }
                           />
                           <Bar dataKey="score" name="Section Score" fill="var(--color-score)" radius={[4, 4, 0, 0]} />
                         </BarChart>
@@ -342,8 +376,8 @@ export default function AnalysisPage() {
             <TabsContent value="comparison">
               <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Multi-Section Comparison</CardTitle>
-                  <CardDescription>Compare all security dimensions across states</CardDescription>
+                  <CardTitle>LGA Rankings</CardTitle>
+                  <CardDescription>All LGAs ranked by their security ratings from highest to lowest</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -357,74 +391,14 @@ export default function AnalysisPage() {
                       <AlertTitle>Error</AlertTitle>
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
-                  ) : stateScores.length === 0 ? (
+                  ) : lgaScores.length === 0 ? (
                     <div className="text-center py-12">
                       <p className="text-slate-500 dark:text-slate-400">
-                        No data available. Complete surveys to see analysis.
+                        No data available. Complete surveys to see rankings.
                       </p>
                     </div>
                   ) : (
-                    <ChartContainer
-                      config={{
-                        "decision-making": {
-                          label: "Decision Making",
-                          color: "#8B5CF6",
-                        },
-                        instruments: {
-                          label: "Security Instruments",
-                          color: "#F97316",
-                        },
-                        intelligence: {
-                          label: "Intelligence & Early Warning",
-                          color: "#3B82F6",
-                        },
-                        resources: {
-                          label: "Dedicated Resources",
-                          color: "#EAB308",
-                        },
-                        institutions: {
-                          label: "Security Institutions",
-                          color: "#EF4444",
-                        },
-                        evaluation: {
-                          label: "Performance Evaluation",
-                          color: "#10B981",
-                        },
-                      }}
-                      className="h-[600px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={stateScores.map((item) => ({
-                            state: item.state,
-                            "decision-making": item.averageScores["decision-making"] || 0,
-                            instruments: item.averageScores["instruments"] || 0,
-                            intelligence: item.averageScores["intelligence"] || 0,
-                            resources: item.averageScores["resources"] || 0,
-                            institutions: item.averageScores["institutions"] || 0,
-                            evaluation: item.averageScores["evaluation"] || 0,
-                          }))}
-
-                          margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="state" angle={-45} textAnchor="end" height={70} />
-                          <YAxis domain={[0, 100]} label={{ value: "Score (%)", angle: -90, position: "insideLeft" }} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Legend />
-                          <Bar dataKey="decision-making" name="Decision Making" fill="var(--color-decision-making)" />
-                          <Bar dataKey="instruments" name="Security Instruments" fill="var(--color-instruments)" />
-                          <Bar
-                            dataKey="intelligence"
-                            name="Intelligence & Early Warning"
-                            fill="var(--color-intelligence)"
-                          />
-                          <Bar dataKey="resources" name="Dedicated Resources" fill="var(--color-resources)" />
-                          <Bar dataKey="institutions" name="Security Institutions" fill="var(--color-institutions)" />
-                          <Bar dataKey="evaluation" name="Performance Evaluation" fill="var(--color-evaluation)" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
+                    <LGARankingsList lgaScores={lgaScores} />
                   )}
                 </CardContent>
               </Card>
