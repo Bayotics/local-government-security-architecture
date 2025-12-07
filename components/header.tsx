@@ -65,7 +65,7 @@ export default function Header() {
               </button>
             </Link>
 
-            <Link href="#features">
+            <Link href="/how-it-works">
               <button
                 className={cn(
                   "px-4 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-light",
