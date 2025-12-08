@@ -207,9 +207,9 @@ const LandingPage: FC = () => {
             </div>
 
             {/* Hero Section */}
-            <section className="relative min-h-screen flex items-center justify-center px-4 py-20 mt-24">
+            <section className="relative min-h-screen flex items-center justify-center px-4 py-20 mt-1">
               <div className="max-w-7xl mx-auto w-full">
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                <div className="grid lg:grid-cols-2 gap-12 items-center mt-20">
                   {/* Left Content */}
                   <motion.div
                     initial={{ opacity: 0, x: -50 }}
