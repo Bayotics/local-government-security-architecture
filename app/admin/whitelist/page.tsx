@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Edit, RotateCcw, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import type { LGAWhitelist } from "@/lib/models"
+import { nigerianStates } from "@/lib/nigeria-data"
 
 export default function AdminWhitelist() {
   const router = useRouter()
@@ -115,8 +116,11 @@ export default function AdminWhitelist() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All states</SelectItem>
-                  <SelectItem value="Lagos">Lagos</SelectItem>
-                  <SelectItem value="Kano">Kano</SelectItem>
+                  {nigerianStates.map((state) => (
+                    <SelectItem key={state.id} value={state.name}>
+                      {state.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

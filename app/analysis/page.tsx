@@ -195,7 +195,7 @@ export default function AnalysisPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-4 mb-6">
               <TabsTrigger value="lga-ratings">LGA Ratings</TabsTrigger>
-              <TabsTrigger value="lsar">LSAr Analysis</TabsTrigger>
+              <TabsTrigger value="lsar">State Ratings</TabsTrigger>
               <TabsTrigger value="section">Section Analysis</TabsTrigger>
               <TabsTrigger value="comparison">LGA Ranking</TabsTrigger>
             </TabsList>
@@ -206,12 +206,11 @@ export default function AnalysisPage() {
               <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    Local Security Architecture Rating (LSAr)
+                    Local Security Architecture Rating (LSAr) Per State
                     <Badge variant="outline">Weighted Score</Badge>
                   </CardTitle>
                   <CardDescription>
-                    Overall security preparedness rating using weighted calculation: LSAr = ∑(2X₁, X₂, 2X₃, 2X₄, 2X₅,
-                    X₆)/10
+                    Overall security preparedness rating using accurately weighted calculation
                   </CardDescription>
 
                   {/* Color Legend */}

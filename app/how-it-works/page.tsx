@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ArrowRight, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
+import VideoSection from "@/components/video-section"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -253,6 +254,26 @@ export default function HowItWorksPage() {
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/20 rounded-full blur-2xl" />
           </motion.div>
+        </div>
+      </section>
+
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              See It in <span className="text-[#34D399]">Action</span>
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Watch a quick demo of how our platform works from start to finish
+            </p>
+          </motion.div>
+
+          <VideoSection />
         </div>
       </section>
 
