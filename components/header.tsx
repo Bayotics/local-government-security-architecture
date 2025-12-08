@@ -38,11 +38,11 @@ export default function Header() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         isHomepage
-          ? "bg-[#0A192F]/95 backdrop-blur-md border-b border-[#34D399]/10"
+          ? "bg-black backdrop-blur-md "
           : isScrolled
             ? isLightMode
-              ? "bg-white/95 backdrop-blur-md border-b border-primary/10"
-              : "bg-[#0A192F]/95 backdrop-blur-md border-b border-primary/10"
+              ? "bg-white/95 backdrop-blur-md "
+              : "bg-black backdrop-blur-md"
             : isLightMode
               ? "bg-white/80 backdrop-blur-md"
               : "bg-transparent",
