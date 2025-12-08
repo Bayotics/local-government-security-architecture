@@ -65,13 +65,14 @@ const LandingPage: FC = () => {
   useEffect(() => {
     if (!isLoading && typeof window !== "undefined") {
       // Create smooth scroll effect
-      const smoother = ScrollSmoother.create({
-        wrapper: smoothWrapperRef.current!,
-        content: smoothContentRef.current!,
-        smooth: 2,
-        effects: true,
-        smoothTouch: 0.1,
-      })
+      // const smoother = ScrollSmoother.create({
+      //   wrapper: smoothWrapperRef.current!,
+      //   content: smoothContentRef.current!,
+      //   smooth: 1.5,
+      //   effects: true,
+      //   smoothTouch: 0.1,
+      // })
+       document.documentElement.style.scrollBehavior = 'auto'
 
       // Hero headline scale and fade animation
       gsap.fromTo(
@@ -160,7 +161,7 @@ const LandingPage: FC = () => {
       )
 
       return () => {
-        smoother.kill()
+        // smoother.kill()
         ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
       }
     }
