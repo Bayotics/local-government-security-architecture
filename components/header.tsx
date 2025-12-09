@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { Home, UserCircle } from "lucide-react"
+import { UserCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
+import Logo from "./logo"
 
 export default function Header() {
   const router = useRouter()
@@ -51,22 +52,19 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-4">
-            <Link href="/">
-              <button
+            <Link href="/" className="flex items-center gap-2 group">
+              <Logo className="h-8 w-auto transition-transform group-hover:scale-105" />
+              <span
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg backdrop-blur-md border transition-all",
-                  isHomepage
-                    ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30"
-                    : isLightMode
-                      ? "bg-primary/10 border-primary/20 hover:bg-primary/20 hover:border-primary/40"
-                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30",
+                  "text-xl font-normal tracking-tight transition-colors",
+                  isHomepage || !isLightMode ? "text-white" : "text-primary",
                 )}
               >
-                <Home className={cn("h-4 w-4", isHomepage || !isLightMode ? "text-[#34D399]" : "text-primary")} />
-              </button>
+                LSAT
+              </span>
             </Link>
 
-            <Link href="/admin/login">
+            <Link href="/admin/login" className="ml-10">
               <button
                 className={cn(
                   "px-4 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-light flex items-center gap-2",

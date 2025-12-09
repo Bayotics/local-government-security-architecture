@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         .join("\n")}
       
       Based on this Local Security Architecture Rating (LSAr) assessment, please provide:
-      1. A summary of the local security architecture status in ${lga} Local Government
+      1. A summary of the local security assessment status in ${lga} Local Government
       2. Key strengths identified from the assessment (areas with scores above 60%)
       3. Critical deficits and vulnerabilities in each dimension (areas with scores below 40%)
       4. Priority areas that need immediate attention (lowest scoring dimensions)

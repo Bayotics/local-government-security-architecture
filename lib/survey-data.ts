@@ -17,6 +17,7 @@ export interface Section {
   description: string
   questions: Question[]
   weight: number // Weight for final calculation
+  quotation?: string // Optional quotation property for section popup
 }
 
 export const sections: Section[] = [
@@ -25,6 +26,8 @@ export const sections: Section[] = [
     title: "Local Security Decision Making Authority",
     description: "Questions regarding local security decision making authority and governance.",
     weight: 2,
+    quotation:
+      "Effective security begins with decisive leadership. The authority to make swift, informed decisions at the local level forms the foundation of a resilient security architecture.",
     questions: [
       {
         id: "decision-1",
@@ -41,7 +44,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-2",
-        text: "Does the LG have a full-fledged Department of Security that attends to security alerts?",
+        text: "Does the LG have a full-fledged Dept of Security?",
         section: "decision-making",
         options: [
           { id: "d2-1", text: "Yes", score: 1 },
@@ -51,7 +54,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-3",
-        text: "Is there a standing committee responsible for security decision making in the LGA?",
+        text: "Is there a standing Committee for security decision making in LGA?",
         section: "decision-making",
         options: [
           { id: "d3-1", text: "Yes", score: 1 },
@@ -61,7 +64,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-4",
-        text: "Are there community representatives in this Committee such as traditional rulers, community/youth/women leaders, professional groups, faith-based organisations, NGOs, ?",
+        text: "Are there community reps in the Committee such as traditional rulers, community/youth/women leaders, faith based organisations, NGOs?",
         section: "decision-making",
         options: [
           { id: "d4-1", text: "Yes", score: 1 },
@@ -71,7 +74,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-5",
-        text: "How often does this Committee meet?",
+        text: "How often does the Security Committee meet?",
         section: "decision-making",
         options: [
           { id: "d5-1", text: "Daily", score: 1 },
@@ -84,7 +87,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-6",
-        text: "Does the LG have security Adviser/professionals to analyse information before security decisions are made?",
+        text: "Does LG have security professionals to analyse information before security decisions are made?",
         section: "decision-making",
         options: [
           { id: "d6-1", text: "Yes", score: 1 },
@@ -94,7 +97,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-7",
-        text: "Is the LGA Chairman responsible for security decision making in the LGA?",
+        text: "Is LGA Chairman solely responsible for security decision making in LGA?",
         section: "decision-making",
         options: [
           { id: "d7-1", text: "Yes", score: 1 },
@@ -115,7 +118,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-9",
-        text: "Does the Local Government Chairman have to clear security decisions from a higher authority before implementation? ",
+        text: "Does LG Chairman have to clear security decisions from a higher authority before implementation?",
         section: "decision-making",
         options: [
           { id: "d9-1", text: "No", score: 1 },
@@ -125,7 +128,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-10",
-        text: "Can the LG Chairman instruct the Police and/or security agencies in the locality on security decisions made?",
+        text: "Can LG Chairman instruct the Police and/or security agencies in the locality on security decisions made?",
         section: "decision-making",
         options: [
           { id: "d10-1", text: "Yes", score: 1 },
@@ -140,6 +143,8 @@ export const sections: Section[] = [
     title: "Development of Local Security Instruments",
     description: "Questions regarding development of local security instruments.",
     weight: 1,
+    quotation:
+      "Laws and regulations are the blueprints of security. A robust legal framework empowers local governments to establish order and accountability in their communities.",
     questions: [
       {
         id: "instruments-1",
@@ -248,6 +253,8 @@ export const sections: Section[] = [
     title: "Local Security Intelligence and Early Warning",
     description: "Questions regarding local security intelligence gathering and early warning.",
     weight: 2,
+    quotation:
+      "Knowledge is the first line of defense. Effective intelligence gathering and early warning systems enable communities to anticipate threats and respond proactively.",
     questions: [
       {
         id: "intelligence-1",
@@ -272,7 +279,7 @@ export const sections: Section[] = [
       },
       {
         id: "intelligence-3",
-        text: "Does the LG have its own independent intelligence gathering organization/system?",
+        text: "Does the LG have its own independent intelligence gathering organisation?",
         section: "intelligence",
         options: [
           { id: "in3-1", text: "Yes", score: 1 },
@@ -292,7 +299,7 @@ export const sections: Section[] = [
       },
       {
         id: "intelligence-5",
-        text: "Is security intelligence gathering in the LGA enabled by equipment/technology such as vehicles, drones, CCTV, computers, Internet, database, or AI? ",
+        text: "Is security intelligence in the LGA enabled by technology such as drones, CCTV?",
         section: "intelligence",
         options: [
           { id: "in5-1", text: "Yes", score: 1 },
@@ -343,7 +350,7 @@ export const sections: Section[] = [
       },
       {
         id: "intelligence-10",
-        text: "Does the LG have an electronic medium for early warning that covers the entire local government area? ",
+        text: "Does the LG have an electronic medium that covers the entire local government area?",
         section: "intelligence",
         options: [
           { id: "in10-1", text: "Yes", score: 1 },
@@ -358,6 +365,8 @@ export const sections: Section[] = [
     title: "Dedicated Resources for Local Security Provision",
     description: "Questions regarding dedicated resources for local security provision.",
     weight: 2,
+    quotation:
+      "Security requires investment. Adequate financial resources and proper budgeting ensure that local governments can sustain their security commitments and protect their communities.",
     questions: [
       {
         id: "resources-1",
@@ -432,7 +441,7 @@ export const sections: Section[] = [
       },
       {
         id: "resources-8",
-        text: "Does the LG always get cashbacking for its security budget?",
+        text: "Does the LG always get its budget for security?",
         section: "resources",
         options: [
           { id: "r8-1", text: "Yes", score: 1 },
@@ -467,6 +476,8 @@ export const sections: Section[] = [
     title: "Local Security Intervention Institutions and Mechanisms",
     description: "Questions regarding local security response institutions and mechanisms.",
     weight: 2,
+    quotation:
+      "Strength lies in our institutions. Well-trained personnel and coordinated response mechanisms transform security policies into tangible protection for citizens.",
     questions: [
       {
         id: "institutions-1",
@@ -490,7 +501,7 @@ export const sections: Section[] = [
       },
       {
         id: "institutions-3",
-        text: "Does the LG have an independent security outfit by any designation such as vigilante, community watch, volunteers, etc?",
+        text: "Does the LG have an independent security outfit by any designation such as vigilante, community watch etc?",
         section: "institutions",
         options: [
           { id: "inst3-1", text: "Yes", score: 1 },
@@ -575,6 +586,8 @@ export const sections: Section[] = [
     title: "Local Security Performance Measurement and Evaluation",
     description: "Questions regarding local security performance monitoring, measurement, evaluation and improvement.",
     weight: 1,
+    quotation:
+      "What gets measured gets improved. Continuous evaluation and feedback systems enable local governments to learn, adapt, and enhance their security capabilities over time.",
     questions: [
       {
         id: "evaluation-1",
@@ -608,7 +621,7 @@ export const sections: Section[] = [
       },
       {
         id: "evaluation-4",
-        text: "	Does the LG conduct security surveys and security needs assessment?",
+        text: "Does the LG conduct security surveys?",
         section: "evaluation",
         options: [
           { id: "e4-1", text: "Yes", score: 1 },
@@ -618,7 +631,7 @@ export const sections: Section[] = [
       },
       {
         id: "evaluation-5",
-        text: "Do people trust that the local government can protect them?",
+        text: "Does the LG conduct security need assessment?",
         section: "evaluation",
         options: [
           { id: "e5-1", text: "Yes", score: 1 },
@@ -689,21 +702,23 @@ export const colorCoding = [
 ]
 
 export function calculateLSAr(sectionScores: Record<string, number>): number {
-  const weights = {
-    "decision-making": 2,
-    instruments: 1,
-    intelligence: 2,
-    resources: 2,
-    institutions: 2,
-    evaluation: 1,
+  // Map section titles to their weights
+  const weights: Record<string, number> = {
+    "Local Security Decision Making Authority": 2, // X1
+    "Development of Local Security Instruments": 1, // X2
+    "Local Security Intelligence and Early Warning": 2, // X3
+    "Dedicated Resources for Local Security Provision": 2, // X4
+    "Local Security Intervention Institutions and Mechanisms": 2, // X5
+    "Local Security Performance Measurement and Evaluation": 1, // X6
   }
 
   let weightedSum = 0
-  Object.entries(sectionScores).forEach(([sectionId, score]) => {
-    const weight = weights[sectionId as keyof typeof weights] || 1
+  Object.entries(sectionScores).forEach(([sectionTitle, score]) => {
+    const weight = weights[sectionTitle] || 1
     weightedSum += score * weight
   })
 
+  // Formula: LSAr = (2*X1 + X2 + 2*X3 + 2*X4 + 2*X5 + X6) / 10
   return weightedSum / 10
 }
 

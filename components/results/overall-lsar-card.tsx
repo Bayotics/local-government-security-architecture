@@ -12,7 +12,7 @@ export function OverallLSArCard({ overallLSAr, selectedLga, getLSArColor, getLSA
     <Card>
       <CardHeader>
         <CardTitle>Overall LSAr Rating</CardTitle>
-        <CardDescription>Local Security Architecture Rating for {selectedLga}</CardDescription>
+        <CardDescription>Local Security Assessment Rating for {selectedLga}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-4">
@@ -27,7 +27,7 @@ export function OverallLSArCard({ overallLSAr, selectedLga, getLSArColor, getLSA
               {getLSArRating(overallLSAr)}
             </div>
             <div className="text-sm text-slate-500 dark:text-slate-400">
-              Overall security architecture rating
+              Overall security preparedness rating
             </div>
           </div>
         </div>

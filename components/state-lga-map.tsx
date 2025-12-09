@@ -11,7 +11,7 @@ import { features } from "@/lgaShapes"
 import { useMap } from "react-leaflet"
 import { useMemo } from "react"
 import L from "leaflet"
-import {booleanIntersects} from "@turf/turf"
+import { booleanIntersects } from "@turf/turf"
 import type { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
 import { Button } from "@/components/ui/button"
 
@@ -23,6 +23,7 @@ interface LGAScore {
   averageScores: {
     [key: string]: number
   }
+  lsarScore: number
 }
 
 interface StateLGAMapProps {
@@ -33,15 +34,6 @@ interface StateLGAMapProps {
   error: string | null
   onContinue?: () => void | Promise<void> // support async handler
   isNavigating?: boolean // optional controlled prop
-}
-
-// Calculate the overall average score for an LGA
-const calculateOverallScore = (scores: { [key: string]: number }): number => {
-  const values = Object.values(scores)
-  if (values.length === 0) return 0
-
-  const sum = values.reduce((acc, val) => acc + val, 0)
-  return Number.parseFloat((sum / values.length).toFixed(1))
 }
 
 // Get color based on score
@@ -92,9 +84,7 @@ export function StateLGAMap({
 }: StateLGAMapProps) {
   const [lgasInState, setLgasInState] = useState<string[]>([])
   const [borderLGAs, setBorderLGAs] = useState<string[]>([])
-  const [lgaData, setLgaData] = useState<Map<string, { score: number; color: string; hasSurvey: boolean }>>(
-    new Map(),
-  )
+  const [lgaData, setLgaData] = useState<Map<string, { score: number; color: string; hasSurvey: boolean }>>(new Map())
 
   // internal navigating state (used when parent doesn't control with isNavigating prop)
   const [internalNavigating, setInternalNavigating] = useState(false)
@@ -168,7 +158,7 @@ export function StateLGAMap({
         const lgaScoreData = lgaScores.find((item) => item.lga === lga && item.state === selectedState)
 
         if (lgaScoreData) {
-          const score = calculateOverallScore(lgaScoreData.averageScores)
+          const score = lgaScoreData.lsarScore
           newLgaData.set(lga, {
             score,
             color: getScoreColor(score),
@@ -297,8 +287,8 @@ export function StateLGAMap({
                         isSelected
                           ? "ring-2 ring-offset-2 ring-primary"
                           : isBordering
-                          ? "ring-1 ring-offset-1 ring-primary/50"
-                          : ""
+                            ? "ring-1 ring-offset-1 ring-primary/50"
+                            : ""
                       }`}
                       style={{ backgroundColor: fillColor }}
                     >
@@ -372,7 +362,9 @@ export function StateLGAMap({
             <div className="mt-8">
               {/* GeoJSON Map */}
               <div className="mt-6">
-                <div className="text-sm font-medium mb-2">Map View of Selected and Surrounding LGAs (click to show)</div>
+                <div className="text-sm font-medium mb-2">
+                  Map View of Selected and Surrounding LGAs (click to show)
+                </div>
                 <MapContainer
                   center={[9.082, 8.6753]} // Nigeria center
                   zoom={6}
@@ -394,7 +386,7 @@ export function StateLGAMap({
                       // Decide color
                       let color = "#10b981" // Default for neighbors with no data
                       if (isSelected) {
-                        color = "#1d4ed8"
+                        color = "#03222e"
                       } else if (data?.hasSurvey) {
                         color = getScoreColor(data.score)
                       }

@@ -47,7 +47,7 @@ export function generateOverallRemark(comparison: OverallComparison): string {
   const { change, percentageChange, status, sectionComparisons } = comparison
 
   if (status === "unchanged") {
-    return "The overall security architecture rating remained stable with no significant change from the previous survey."
+    return "The overall security assessment rating remained stable with no significant change from the previous survey."
   }
 
   const direction = status === "improved" ? "improvement" : "decline"
@@ -68,11 +68,11 @@ export function generateOverallRemark(comparison: OverallComparison): string {
   }
 
   if (Math.abs(change) < 5) {
-    return `The overall security architecture showed a slight ${direction} of ${changeDesc}%. ${contextualInfo}`
+    return `The overall security assessment showed a slight ${direction} of ${changeDesc}%. ${contextualInfo}`
   } else if (Math.abs(change) < 15) {
-    return `The overall security architecture demonstrated a moderate ${direction} of ${changeDesc}%. ${contextualInfo}`
+    return `The overall security assessment demonstrated a moderate ${direction} of ${changeDesc}%. ${contextualInfo}`
   } else {
-    return `The overall security architecture experienced a significant ${direction} of ${changeDesc}%. ${contextualInfo}`
+    return `The overall security assessment experienced a significant ${direction} of ${changeDesc}%. ${contextualInfo}`
   }
 }
 

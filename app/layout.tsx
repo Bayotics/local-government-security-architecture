@@ -4,17 +4,21 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Script from "next/script"
 import "./globals.css"
 import "leaflet/dist/leaflet.css"
-import { Analytics } from '@vercel/analytics/next'
+import { Analytics } from "@vercel/analytics/next"
 
 const raleway = Poppins({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-raleway",
-  weight: ["100", "200","300", "400","500", "600", "700", "800", "900"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 })
+
 export const metadata = {
   title: "Nigeria Security Awareness Survey",
   description: "Survey application for security awareness in Nigerian local governments",
+  icons: {
+    icon: "/favicon.svg",
+  },
 }
 
 export default function RootLayout({
@@ -38,7 +42,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange={false}>
           {children}
         </ThemeProvider>
-         <Analytics />
+        <Analytics />
       </body>
     </html>
   )

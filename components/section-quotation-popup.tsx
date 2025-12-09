@@ -45,7 +45,7 @@ export function SectionQuotationPopup({ isOpen, sectionTitle, sectionId, onConti
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl blur-xl opacity-30 animate-pulse" />
 
               {/* Card */}
-              <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-emerald-500/20 overflow-hidden max-h-[80vh] overflow-y-auto">
+              <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-emerald-500/20 overflow-hidden max-h-[80vh] overflow-y-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
@@ -71,7 +71,7 @@ export function SectionQuotationPopup({ isOpen, sectionTitle, sectionId, onConti
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="text-2xl md:text-3xl font-bold text-center mb-8 text-white text-balance"
+                    className="text-2xl md:text-3xl font-normal text-center mb-8 text-white text-balance"
                   >
                     {sectionTitle}
                   </motion.h2>

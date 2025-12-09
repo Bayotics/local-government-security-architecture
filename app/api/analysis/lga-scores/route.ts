@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import clientPromise from "@/lib/mongodb"
-import { calculateLSAr, getColorCoding } from "@/lib/survey-data"
+import { getColorCoding } from "@/lib/survey-data"
 
 export async function GET(req: NextRequest) {
   try {
@@ -47,7 +47,6 @@ export async function GET(req: NextRequest) {
       ])
       .toArray()
 
-    // Process results to calculate average section scores and LSAr scores
     const processedScores = lgaScores.map((lgaData: any) => {
       const { state, lga, count, results } = lgaData
 
@@ -61,22 +60,24 @@ export async function GET(req: NextRequest) {
         "Local Security Performance Measurement and Evaluation": 0,
       }
 
+      let totalLsarScore = 0
+
       results.forEach((result: any) => {
         if (result.sectionScores) {
           Object.keys(sectionTotals).forEach((sectionName) => {
             sectionTotals[sectionName as keyof typeof sectionTotals] += result.sectionScores[sectionName] || 0
           })
         }
+        totalLsarScore += result.lsarScore || 0
       })
 
-      // Calculate averages
+      // Calculate averages for section scores
       const averageScores: Record<string, number> = {}
       Object.keys(sectionTotals).forEach((sectionName) => {
         averageScores[sectionName] = count > 0 ? sectionTotals[sectionName as keyof typeof sectionTotals] / count : 0
       })
 
-      // Calculate overall LSAr score
-      const lsarScore = calculateLSAr(averageScores)
+      const lsarScore = count > 0 ? totalLsarScore / count : 0
       const colorCoding = getColorCoding(lsarScore)
 
       return {
@@ -92,6 +93,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(processedScores)
   } catch (error: any) {
     console.error("Error fetching LGA scores:", error)
-    return NextResponse.json({ error: 'Error fetching Scores. Check your network' }, { status: 500 })
+    return NextResponse.json({ error: "Error fetching Scores. Check your network" }, { status: 500 })
   }
 }

@@ -194,7 +194,7 @@ export default function LocalAnalysisPage() {
                     Local Government LSAr Scores
                     <Badge variant="outline">Weighted Rating</Badge>
                   </CardTitle>
-                  <CardDescription>Compare Local Security Architecture ratings across LGAs</CardDescription>
+                  <CardDescription>Compare Local Security Assessment ratings across LGAs</CardDescription>
                   <div className="mt-4">
                     <label className="text-sm font-medium mb-1 block">Select State</label>
                     <Select value={selectedState} onValueChange={setSelectedState}>
@@ -500,7 +500,7 @@ export default function LocalAnalysisPage() {
 
           <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
             <p>
-              Analysis based on Local Security Architecture (LSAr) framework. Last updated:{" "}
+              Analysis based on Local Security Assessment (LSAr) framework. Last updated:{" "}
               {new Date().toLocaleDateString()}
             </p>
           </div>

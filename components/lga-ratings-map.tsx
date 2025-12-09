@@ -150,7 +150,7 @@ export default function LGARatingsMap() {
           <Badge variant="outline">{features.length} LGAs</Badge>
         </CardTitle>
         <CardDescription>
-          Interactive map showing Local Security Architecture ratings across all 774 Nigerian LGAs
+          Interactive map showing Local Security Assessment ratings across all 774 Nigerian LGAs
         </CardDescription>
 
         {/* Color Legend */}

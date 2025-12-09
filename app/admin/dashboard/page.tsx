@@ -120,7 +120,7 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-foreground">Admin Dashboard</h1>
-                <p className="text-muted-foreground">Nigeria Security Architecture Survey</p>
+                <p className="text-muted-foreground">Nigeria Security Assessment Tracker</p>
               </div>
             </div>
           </div>

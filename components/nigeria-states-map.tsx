@@ -133,7 +133,7 @@ export function NigeriaStatesMap({ selectedState, selectedLga, lgaScores, loadin
       <CardHeader>
         <CardTitle>Nigeria LSAr Map</CardTitle>
         <CardDescription>
-          Local Security Architecture ratings across Nigeria{selectedState ? ` - ${selectedState} State selected` : ""}
+          Local Security Assessment ratings across Nigeria{selectedState ? ` - ${selectedState} State selected` : ""}
         </CardDescription>
       </CardHeader>
       <CardContent>

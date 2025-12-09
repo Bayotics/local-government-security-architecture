@@ -1,12 +1,14 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { useSurvey } from "@/context/survey-context"
 import { sections, getScoreFromOptionId } from "@/lib/survey-data"
 import { features } from "@/lgaShapes"
-import {booleanIntersects} from "@turf/turf"
+import booleanIntersects from "@turf/boolean-intersects"
 import type { Feature as TurfFeature, Polygon, MultiPolygon } from "geojson"
 import type { SurveyResult } from "@/lib/models"
 import { compareSurveys, type OverallComparison } from "@/lib/comparison-utils"
-import { getLSArColor, getLSArRating, type NeighboringLGAData } from "@/lib/results-utils"
+import { getLSArColor, type NeighboringLGAData } from "@/lib/results-utils"
 
 export function useResultsData() {
   const { answers, selectedState, selectedLga } = useSurvey()
@@ -46,12 +48,23 @@ export function useResultsData() {
     setSectionScores(scores)
   }, [answers])
 
-  // Calculate overall LSAr
+  // Calculate overall LSAr using weighted formula
   useEffect(() => {
     if (Object.keys(sectionScores).length > 0) {
-      const scores = Object.values(sectionScores)
-      const average = scores.reduce((sum, score) => sum + score, 0) / scores.length
-      setOverallLSAr(Number.parseFloat(average.toFixed(1)))
+      // Map section titles to their scores
+      const decisionMaking = sectionScores["Local Security Decision Making Authority"] || 0 // X1, weight: 2
+      const instruments = sectionScores["Development of Local Security Instruments"] || 0 // X2, weight: 1
+      const intelligence = sectionScores["Local Security Intelligence and Early Warning"] || 0 // X3, weight: 2
+      const resources = sectionScores["Dedicated Resources for Local Security Provision"] || 0 // X4, weight: 2
+      const institutions = sectionScores["Local Security Intervention Institutions and Mechanisms"] || 0 // X5, weight: 2
+      const evaluation = sectionScores["Local Security Performance Measurement and Evaluation"] || 0 // X6, weight: 1
+
+      // Apply the weighted formula
+      const weightedSum =
+        2 * decisionMaking + instruments + 2 * intelligence + 2 * resources + 2 * institutions + evaluation
+      const lsarScore = weightedSum / 10
+
+      setOverallLSAr(Number.parseFloat(lsarScore.toFixed(1)))
     }
   }, [sectionScores])
 
