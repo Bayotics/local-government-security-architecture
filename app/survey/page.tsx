@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,8 +8,8 @@ import { Progress } from "@/components/ui/progress"
 import { QuestionOptions } from "@/components/question-options"
 import { sections } from "@/lib/survey-data"
 import { useSurvey } from "@/context/survey-context"
-import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, CheckCircle, Loader2 } from 'lucide-react'
+import { useRouter } from "next/navigation"
+import { ChevronLeft, ChevronRight, CheckCircle, Loader2 } from "lucide-react"
 import { DebugInfo } from "@/components/debug-info"
 import { Navbar } from "@/components/navbar"
 import { SectionQuotationPopup } from "@/components/section-quotation-popup"
@@ -35,6 +35,7 @@ export default function SurveyPage() {
   const [showQuotation, setShowQuotation] = useState(true)
   const [hasShownQuotation, setHasShownQuotation] = useState<Set<number>>(new Set())
   const questionsPerPage = 5
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
@@ -76,6 +77,27 @@ export default function SurveyPage() {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [currentPageIndex, currentSectionIndex])
 
+  useEffect(() => {
+    const playAudio = async () => {
+      if (audioRef.current) {
+        audioRef.current.volume = 0.1
+        try {
+          await audioRef.current.play()
+        } catch (error) {
+          console.error("Audio autoplay failed:", error)
+        }
+      }
+    }
+
+    playAudio()
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+    }
+  }, [])
+
   const currentSection = sections[currentSectionIndex]
   const totalQuestionsInSection = currentSection?.questions.length || 0
   const startIndex = currentPageIndex * questionsPerPage
@@ -87,7 +109,7 @@ export default function SurveyPage() {
 
   const handleQuotationContinue = () => {
     setShowQuotation(false)
-    setHasShownQuotation(prev => new Set(prev).add(currentSectionIndex))
+    setHasShownQuotation((prev) => new Set(prev).add(currentSectionIndex))
   }
 
   const goToNextPage = () => {
@@ -136,13 +158,19 @@ export default function SurveyPage() {
   return (
     <>
       <Navbar />
+      <audio
+        ref={audioRef}
+        loop
+        preload="auto"
+        src="/images/the-20ninth-20wave-20-20reformation-20-28official-20video-29.mp3"
+      />
       <SectionQuotationPopup
         isOpen={showQuotation}
         sectionTitle={currentSection.title}
         sectionId={currentSection.id}
         onContinue={handleQuotationContinue}
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
         <div className="max-w-6xl mx-auto">
           <motion.div

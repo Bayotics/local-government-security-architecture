@@ -963,7 +963,7 @@ const LandingPage: FC = () => {
         </div>
       </div>
 
-      <VideoPlayerPopup videoUrl="/placeholder-video.mp4" />
+      <VideoPlayerPopup videoUrl="https://github.com/Bayotics/local-government-security-architecture/releases/download/video/lsat-how-it-works.mp4" />
 
       {/* About Modal */}
       <AnimatePresence>

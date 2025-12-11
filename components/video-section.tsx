@@ -10,8 +10,7 @@ interface VideoSectionProps {
 }
 
 export default function VideoSection({
-  videoUrl = "/images/placeholder-video.mp4",
-  thumbnailUrl = "/video-thumbnail.jpg",
+  videoUrl = "https://github.com/Bayotics/local-government-security-architecture/releases/download/video/lsat-how-it-works.mp4",
 }: VideoSectionProps) {
   const [isPlaying, setIsPlaying] = useState(false)
 
@@ -29,7 +28,7 @@ export default function VideoSection({
         {/* Thumbnail Image */}
         <div className="relative aspect-video w-full">
           <img
-            src={thumbnailUrl || "/placeholder.svg"}
+            src="https://res.cloudinary.com/dvrpa1lyo/image/upload/v1765360751/video-thumbnail_zdckjb.png"
             alt="Security assessment demo video"
             className="w-full h-full object-cover"
           />
