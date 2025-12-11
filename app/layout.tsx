@@ -15,7 +15,7 @@ const raleway = Poppins({
 
 export const metadata = {
   title: "Nigeria Local Security Architecture Tracker",
-  description: "Survey application for security awareness in Nigerian local governments",
+  description: "Survey application for security preparedness in Nigerian local governments",
   icons: {
     icon: "/favicon.svg",
   },

@@ -312,7 +312,7 @@ export default function SurveyPage() {
             </motion.div>
           </AnimatePresence>
 
-          <DebugInfo />
+          {/* <DebugInfo /> */}
         </div>
       </div>
     </>
