@@ -10,7 +10,6 @@ import { sections } from "@/lib/survey-data"
 import { useSurvey } from "@/context/survey-context"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, CheckCircle, Loader2 } from "lucide-react"
-import { DebugInfo } from "@/components/debug-info"
 import { Navbar } from "@/components/navbar"
 import { SectionQuotationPopup } from "@/components/section-quotation-popup"
 
@@ -35,7 +34,8 @@ export default function SurveyPage() {
   const [showQuotation, setShowQuotation] = useState(true)
   const [hasShownQuotation, setHasShownQuotation] = useState<Set<number>>(new Set())
   const questionsPerPage = 5
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const popupAudioRef = useRef<HTMLAudioElement>(null)
+  const surveyAudioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
@@ -78,25 +78,56 @@ export default function SurveyPage() {
   }, [currentPageIndex, currentSectionIndex])
 
   useEffect(() => {
-    const playAudio = async () => {
-      if (audioRef.current) {
-        audioRef.current.volume = 0.1
-        try {
-          await audioRef.current.play()
-        } catch (error) {
-          console.error("Audio autoplay failed:", error)
+    // Initialize both audio elements with volume
+    if (popupAudioRef.current) {
+      popupAudioRef.current.volume = 0.7
+    }
+    if (surveyAudioRef.current) {
+      surveyAudioRef.current.volume = 0.7
+    }
+
+    // Cleanup: pause both audios on unmount
+    return () => {
+      if (popupAudioRef.current) {
+        popupAudioRef.current.pause()
+      }
+      if (surveyAudioRef.current) {
+        surveyAudioRef.current.pause()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const switchAudio = async () => {
+      if (showQuotation) {
+        // Popup is showing: pause survey music, play popup music
+        if (surveyAudioRef.current) {
+          surveyAudioRef.current.pause()
+        }
+        if (popupAudioRef.current) {
+          try {
+            await popupAudioRef.current.play()
+          } catch (error) {
+            console.error("Popup audio playback failed:", error)
+          }
+        }
+      } else {
+        // Popup is closed: pause popup music, play survey music
+        if (popupAudioRef.current) {
+          popupAudioRef.current.pause()
+        }
+        if (surveyAudioRef.current) {
+          try {
+            await surveyAudioRef.current.play()
+          } catch (error) {
+            console.error("Survey audio playback failed:", error)
+          }
         }
       }
     }
 
-    playAudio()
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-      }
-    }
-  }, [])
+    switchAudio()
+  }, [showQuotation])
 
   const currentSection = sections[currentSectionIndex]
   const totalQuestionsInSection = currentSection?.questions.length || 0
@@ -158,11 +189,12 @@ export default function SurveyPage() {
   return (
     <>
       <Navbar />
+      <audio ref={popupAudioRef} loop preload="auto" src="/images/asa-no-one-knows.mp3" />
       <audio
-        ref={audioRef}
+        ref={surveyAudioRef}
         loop
         preload="auto"
-        src="/images/the-20ninth-20wave-20-20reformation-20-28official-20video-29.mp3"
+        src="/images/asa-eye-adaba.mp3"
       />
       <SectionQuotationPopup
         isOpen={showQuotation}

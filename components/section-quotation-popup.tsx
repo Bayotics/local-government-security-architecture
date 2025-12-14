@@ -61,7 +61,7 @@ export function SectionQuotationPopup({ isOpen, sectionTitle, sectionId, onConti
                   >
                     <Sparkles className="w-5 h-5 text-emerald-400" />
                     <span className="text-emerald-400 font-semibold text-sm tracking-wider uppercase">
-                      Section Overview
+                      Section Intro
                     </span>
                     <Sparkles className="w-5 h-5 text-emerald-400" />
                   </motion.div>
