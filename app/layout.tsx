@@ -1,6 +1,8 @@
 import type React from "react"
 import { Poppins } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AudioProvider } from "@/context/audio-context"
+import { StickyAudioControl } from "@/components/sticky-audio-control"
 import Script from "next/script"
 import "./globals.css"
 import "leaflet/dist/leaflet.css"
@@ -39,9 +41,12 @@ export default function RootLayout({
         />
       </head>
       <body className={raleway.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange={false}>
-          {children}
-        </ThemeProvider>
+        <AudioProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange={false}>
+            {children}
+            <StickyAudioControl />
+          </ThemeProvider>
+        </AudioProvider>
         <Analytics />
       </body>
     </html>

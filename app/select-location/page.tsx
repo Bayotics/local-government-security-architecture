@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
-import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
+import { useAudio } from "@/context/audio-context"
 import { Navbar } from "@/components/navbar"
 import dynamic from 'next/dynamic'
 const StateLGAMap = dynamic(
@@ -30,6 +30,7 @@ interface LGAScore {
 
 export default function SelectLocation() {
   const router = useRouter()
+  const { setShowPopup, restoreAudioState, saveAudioState } = useAudio()
   const [selectedState, setSelectedState] = useState<string>("")
   const [selectedLga, setSelectedLga] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(true)
@@ -41,12 +42,18 @@ export default function SelectLocation() {
   const [loadingPastSurveys, setLoadingPastSurveys] = useState(false)
 
   useEffect(() => {
-    if (typeof window === "undefined") return
+    if (typeof globalThis === "undefined" || !globalThis.window) return
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
     if (!isAuthenticated) {
       router.push("/")
       return
     }
+
+    // Restore audio state from navigation
+    restoreAudioState()
+    
+    // Keep popup state since we're still in the popup context
+    setShowPopup(true)
 
     const preSelectedState = localStorage.getItem("selectedState")
     const preSelectedLga = localStorage.getItem("selectedLga")
@@ -58,7 +65,19 @@ export default function SelectLocation() {
     }
     
     setLoading(false)
-  }, [router])
+  }, [router, setShowPopup, restoreAudioState])
+
+  // Save audio state before navigation
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveAudioState()
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [saveAudioState])
 
   useEffect(() => {
     const fetchLGAScores = async () => {
@@ -121,6 +140,10 @@ export default function SelectLocation() {
       localStorage.removeItem("currentSectionIndex")
       localStorage.setItem("selectedState", selectedState)
       localStorage.setItem("selectedLga", selectedLga)
+      
+      // Save audio state before navigation
+      saveAudioState()
+      
       router.push("/survey")
     }
   }

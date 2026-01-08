@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAudio } from "@/context/audio-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -15,6 +16,7 @@ import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
 
 export default function LGALogin() {
   const router = useRouter()
+  const { playTrack, setShowPopup, saveAudioState } = useAudio()
   const [step, setStep] = useState<"select" | "otp">("select")
   const [selectedState, setSelectedState] = useState("")
   const [selectedLGA, setSelectedLGA] = useState("")
@@ -22,6 +24,49 @@ export default function LGALogin() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [maskedPhone, setMaskedPhone] = useState("")
+
+  // Start popup audio on page load
+  useEffect(() => {
+    setShowPopup(true) // Indicate popup state so popup audio plays
+    playTrack("popup") // Start playing popup audio
+  }, [playTrack, setShowPopup])
+
+  // Save audio state before navigation
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveAudioState()
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [saveAudioState])
+
+  const getButtonText = () => {
+    if (isLoading) return null
+    return step === "select" ? "Send OTP" : "Verify & Continue"
+  }
+
+  const getButtonContent = () => {
+    if (isLoading) {
+      return (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Processing...
+        </>
+      )
+    }
+    return getButtonText()
+  }
+
+  const handleButtonClick = () => {
+    if (step === "select") {
+      handleSelectLGA()
+    } else {
+      handleVerifyOTP()
+    }
+  }
 
   const filteredLGAs = selectedState
     ? nigerianLGAs.filter((lga) => lga.state_id === Number.parseInt(selectedState))
@@ -72,7 +117,8 @@ export default function LGALogin() {
   }
 
   const handleVerifyOTP = async () => {
-    if (!otp || otp.length !== 6) {
+    const isValid = otp?.length === 6
+    if (!isValid) {
       setError("Please enter a valid 6-digit OTP")
       return
     }
@@ -107,6 +153,9 @@ export default function LGALogin() {
       localStorage.setItem("selectedLga", data.lgaName)
       localStorage.setItem("preSelectedStateId", data.stateId.toString())
       localStorage.setItem("preSelectedLgaId", data.lgaId.toString())
+
+      // Save audio state before navigation
+      saveAudioState()
 
       // Redirect to survey
       router.push("/select-location")
@@ -214,7 +263,7 @@ export default function LGALogin() {
                       type="text"
                       placeholder="Enter 6-digit OTP"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      onChange={(e) => setOtp(e.target.value.replaceAll(/\D/g, "").slice(0, 6))}
                       maxLength={6}
                       className="text-center text-2xl tracking-widest"
                     />
@@ -228,20 +277,11 @@ export default function LGALogin() {
             </CardContent>
             <CardFooter>
               <Button
-                onClick={step === "select" ? handleSelectLGA : handleVerifyOTP}
+                onClick={handleButtonClick}
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : step === "select" ? (
-                  "Send OTP"
-                ) : (
-                  "Verify & Continue"
-                )}
+                {getButtonContent()}
               </Button>
             </CardFooter>
           </Card>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { QuestionOptions } from "@/components/question-options"
 import { sections } from "@/lib/survey-data"
 import { useSurvey } from "@/context/survey-context"
+import { useAudio } from "@/context/audio-context"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, CheckCircle, Loader2 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
@@ -23,10 +24,10 @@ export default function SurveyPage() {
     currentSectionIndex,
     setCurrentSectionIndex,
     isComplete,
-    canProceedToNextSection,
     selectedState,
     selectedLga,
   } = useSurvey()
+  const { playTrack, setShowPopup, restoreAudioState, saveAudioState } = useAudio()
 
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [progress, setProgress] = useState(0)
@@ -34,10 +35,10 @@ export default function SurveyPage() {
   const [showQuotation, setShowQuotation] = useState(true)
   const [hasShownQuotation, setHasShownQuotation] = useState<Set<number>>(new Set())
   const questionsPerPage = 5
-  const popupAudioRef = useRef<HTMLAudioElement>(null)
-  const surveyAudioRef = useRef<HTMLAudioElement>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
     if (!isAuthenticated) {
       router.push("/")
@@ -54,18 +55,33 @@ export default function SurveyPage() {
       if (!hasState || !hasLga) {
         router.push("/select-location")
       } else if (!selectedState && stateFromStorage) {
-        window.location.reload()
+        globalThis.location.reload()
       }
     }, 500)
 
     return () => clearTimeout(checkLocation)
   }, [selectedState, selectedLga, router])
 
+  // Initialize audio on mount
   useEffect(() => {
-    if (!hasShownQuotation.has(currentSectionIndex)) {
+    if (!isMounted) return
+    restoreAudioState()
+  }, [isMounted, restoreAudioState])
+
+  useEffect(() => {
+    if (!isMounted) return
+    if (hasShownQuotation.has(currentSectionIndex)) {
+      setShowQuotation(false)
+      // When quotation is not shown, play survey audio
+      setShowPopup(false)
+      playTrack("survey")
+    } else {
       setShowQuotation(true)
+      // When quotation shows, play popup audio
+      setShowPopup(true)
+      playTrack("popup")
     }
-  }, [currentSectionIndex, hasShownQuotation])
+  }, [currentSectionIndex, hasShownQuotation, isMounted, playTrack, setShowPopup])
 
   useEffect(() => {
     const totalQuestions = sections.reduce((total, section) => total + section.questions.length, 0)
@@ -77,57 +93,17 @@ export default function SurveyPage() {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [currentPageIndex, currentSectionIndex])
 
+  // Save audio state before navigation
   useEffect(() => {
-    // Initialize both audio elements with volume
-    if (popupAudioRef.current) {
-      popupAudioRef.current.volume = 0.7
-    }
-    if (surveyAudioRef.current) {
-      surveyAudioRef.current.volume = 0.7
+    const handleBeforeUnload = () => {
+      saveAudioState()
     }
 
-    // Cleanup: pause both audios on unmount
+    window.addEventListener("beforeunload", handleBeforeUnload)
     return () => {
-      if (popupAudioRef.current) {
-        popupAudioRef.current.pause()
-      }
-      if (surveyAudioRef.current) {
-        surveyAudioRef.current.pause()
-      }
+      window.removeEventListener("beforeunload", handleBeforeUnload)
     }
-  }, [])
-
-  useEffect(() => {
-    const switchAudio = async () => {
-      if (showQuotation) {
-        // Popup is showing: pause survey music, play popup music
-        if (surveyAudioRef.current) {
-          surveyAudioRef.current.pause()
-        }
-        if (popupAudioRef.current) {
-          try {
-            await popupAudioRef.current.play()
-          } catch (error) {
-            console.error("Popup audio playback failed:", error)
-          }
-        }
-      } else {
-        // Popup is closed: pause popup music, play survey music
-        if (popupAudioRef.current) {
-          popupAudioRef.current.pause()
-        }
-        if (surveyAudioRef.current) {
-          try {
-            await surveyAudioRef.current.play()
-          } catch (error) {
-            console.error("Survey audio playback failed:", error)
-          }
-        }
-      }
-    }
-
-    switchAudio()
-  }, [showQuotation])
+  }, [saveAudioState])
 
   const currentSection = sections[currentSectionIndex]
   const totalQuestionsInSection = currentSection?.questions.length || 0
@@ -140,7 +116,9 @@ export default function SurveyPage() {
 
   const handleQuotationContinue = () => {
     setShowQuotation(false)
+    setShowPopup(false) // Close popup state
     setHasShownQuotation((prev) => new Set(prev).add(currentSectionIndex))
+    playTrack("survey") // Start playing survey audio
   }
 
   const goToNextPage = () => {
@@ -148,15 +126,39 @@ export default function SurveyPage() {
 
     if (currentPageIndex < totalPages - 1) {
       setCurrentPageIndex(currentPageIndex + 1)
-    } else {
-      if (currentSectionIndex < sections.length - 1) {
-        setCurrentSectionIndex(currentSectionIndex + 1)
-        setCurrentPageIndex(0)
-      } else if (isComplete) {
-        setIsNavigating(true)
-        router.push("/survey/results")
-      }
+      return
     }
+
+    if (currentSectionIndex < sections.length - 1) {
+      setCurrentSectionIndex(currentSectionIndex + 1)
+      setCurrentPageIndex(0)
+    } else if (isComplete) {
+      setIsNavigating(true)
+      saveAudioState() // Save audio state before navigation
+      router.push("/survey/results")
+    }
+  }
+
+  const isLastPage = currentSectionIndex === sections.length - 1 && currentPageIndex === totalPages - 1
+
+  const getNextButtonContent = () => {
+    if (isLastPage) {
+      if (isNavigating) {
+        return (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading Results...
+          </>
+        )
+      }
+      return "View Results"
+    }
+    return (
+      <>
+        Next Page
+        <ChevronRight className="h-4 w-4" />
+      </>
+    )
   }
 
   const goToPreviousPage = () => {
@@ -189,13 +191,6 @@ export default function SurveyPage() {
   return (
     <>
       <Navbar />
-      <audio ref={popupAudioRef} loop preload="auto" src="/images/asa-no-one-knows.mp3" />
-      <audio
-        ref={surveyAudioRef}
-        loop
-        preload="auto"
-        src="/images/asa-eye-adaba.mp3"
-      />
       <SectionQuotationPopup
         isOpen={showQuotation}
         sectionTitle={currentSection.title}
@@ -282,7 +277,7 @@ export default function SurveyPage() {
                         </div>
 
                         {/* Options Section */}
-                        <div className="w-full lg:w-3/5 flex-shrink-0">
+                        <div className="w-full lg:w-3/5 flex-shrink-0 pr-5">
                           <QuestionOptions
                             question={question}
                             selectedOptionId={answers[question.id]}
@@ -322,21 +317,7 @@ export default function SurveyPage() {
                       disabled={!areCurrentQuestionsAnswered || isNavigating}
                       className="flex items-center gap-2"
                     >
-                      {currentSectionIndex === sections.length - 1 && currentPageIndex === totalPages - 1 ? (
-                        isNavigating ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Loading Results...
-                          </>
-                        ) : (
-                          "View Results"
-                        )
-                      ) : (
-                        <>
-                          Next Page
-                          <ChevronRight className="h-4 w-4" />
-                        </>
-                      )}
+                      {getNextButtonContent()}
                     </Button>
                   </div>
                 </CardFooter>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from 'next/navigation'
 import { useSurvey } from "@/context/survey-context"
+import { useAudio } from "@/context/audio-context"
 import { sections } from "@/lib/survey-data"
 import { Navbar } from "@/components/navbar"
 import { SurveyComparison } from "@/components/survey-comparison"
@@ -19,6 +20,7 @@ import { generatePDFReport } from "@/lib/pdf-report-generator"
 export default function ResultsPage() {
   const router = useRouter()
   const { answers, selectedState, selectedLga } = useSurvey()
+  const { setShowPopup, restoreAudioState, playTrack, saveAudioState } = useAudio()
   const [analysis, setAnalysis] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -52,6 +54,15 @@ export default function ResultsPage() {
       return
     }
 
+    // Restore audio state from navigation
+    restoreAudioState()
+    
+    // Set popup state to false since we're no longer in popup
+    setShowPopup(false)
+    
+    // Play survey audio since popup is closed
+    playTrack("survey")
+
     const isComplete = sections.every((section) => {
       const answeredQuestions = section.questions.filter((q) => answers[q.id] !== undefined)
       return answeredQuestions.length >= 3
@@ -60,7 +71,19 @@ export default function ResultsPage() {
     if (!isComplete) {
       router.push("/survey")
     }
-  }, [answers, selectedState, selectedLga, router])
+  }, [answers, selectedState, selectedLga, router, restoreAudioState, setShowPopup, playTrack])
+
+  // Save audio state before navigation
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveAudioState()
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [saveAudioState])
 
   // Generate analysis
   const generateAnalysis = async () => {
@@ -202,10 +225,14 @@ export default function ResultsPage() {
             error={error}
             analysis={analysis}
             downloadingPdf={downloadingPdf}
-            onBackToSurvey={() => router.push("/survey")}
+            onBackToSurvey={() => {
+              saveAudioState()
+              router.push("/survey")
+            }}
             onStartNewSurvey={() => {
               localStorage.removeItem("surveyAnswers")
               localStorage.removeItem("currentSectionIndex")
+              saveAudioState()
               router.push("/select-location")
             }}
             onDownloadReport={downloadReport}

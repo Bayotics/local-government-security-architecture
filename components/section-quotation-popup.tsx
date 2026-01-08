@@ -1,19 +1,27 @@
 "use client"
 
+import { useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Quote, Sparkles } from "lucide-react"
+import { useAudio } from "@/context/audio-context"
 import { getQuotationBySection } from "@/lib/sections-quotation"
 
 interface SectionQuotationPopupProps {
-  isOpen: boolean
-  sectionTitle: string
-  sectionId: string
-  onContinue: () => void
+  readonly isOpen: boolean
+  readonly sectionTitle: string
+  readonly sectionId: string
+  readonly onContinue: () => void
 }
 
 export function SectionQuotationPopup({ isOpen, sectionTitle, sectionId, onContinue }: SectionQuotationPopupProps) {
   const quotationData = getQuotationBySection(sectionId)
+  const { setShowPopup } = useAudio()
+
+  // Update audio context when popup opens/closes
+  useEffect(() => {
+    setShowPopup(isOpen)
+  }, [isOpen, setShowPopup])
 
   return (
     <AnimatePresence>
