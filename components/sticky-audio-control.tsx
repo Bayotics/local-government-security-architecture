@@ -1,6 +1,7 @@
 "use client"
 
 import { useAudio } from "@/context/audio-context"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Pause, Play } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -8,6 +9,7 @@ import { useEffect, useState } from "react"
 export function StickyAudioControl() {
   const { isPlaying, togglePlayPause, currentTrack } = useAudio()
   const [isMounted, setIsMounted] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     setIsMounted(true)
@@ -15,8 +17,16 @@ export function StickyAudioControl() {
 
   if (!isMounted) return null
 
-  // Only show the button if music is or should be playing
-  if (!currentTrack && !isPlaying) {
+  // Don't show on homepage (/) or any page where audio shouldn't be playing
+  const isLGALogin = pathname === "/lga-login"
+  const isSelectLocation = pathname === "/select-location"
+  const isSurvey = pathname === "/survey"
+  const isResults = pathname === "/survey/results"
+
+  // Only show on pages where audio is actively managed
+  const shouldShow = (isLGALogin || isSelectLocation || isSurvey || isResults) && currentTrack
+
+  if (!shouldShow) {
     return null
   }
 

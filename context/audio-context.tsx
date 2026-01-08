@@ -14,6 +14,7 @@ interface AudioContextType {
   pauseTrack: (track: AudioTrack) => void
   pauseAll: () => void
   resumeTrack: (track: AudioTrack) => Promise<void>
+  stopAudio: () => void
 
   // Popup state management
   showPopup: boolean
@@ -57,8 +58,7 @@ export function AudioProvider({ children }: { readonly children: React.ReactNode
         surveyAudioRef.current = surveyAudio
       }
 
-      // Restore audio state from localStorage if available
-      restoreAudioState()
+      // Don't auto-restore audio on initial mount - wait for explicit user navigation
     }
 
     return () => {
@@ -112,10 +112,21 @@ export function AudioProvider({ children }: { readonly children: React.ReactNode
         if (audioRef) {
           setCurrentTrack(track)
           setIsPlaying(true)
-          await audioRef.play()
+          // Try to play, but don't fail silently if browser autoplay policy blocks it
+          const playPromise = audioRef.play()
+          if (playPromise !== undefined) {
+            await playPromise
+          }
         }
-      } catch (error) {
-        console.error(`Failed to play ${track} audio:`, error)
+      } catch (error: unknown) {
+        // Silently handle autoplay policy errors - user will need to click play button
+        if (error instanceof Error && error.name === "NotAllowedError") {
+          // Browser autoplay policy prevented playback - this is normal
+          // The sticky button will still work when user clicks it
+          setIsPlaying(false)
+        } else {
+          console.error(`Failed to play ${track} audio:`, error)
+        }
       }
     },
     []
@@ -136,6 +147,23 @@ export function AudioProvider({ children }: { readonly children: React.ReactNode
       surveyAudioRef.current.pause()
     }
     setIsPlaying(false)
+  }, [])
+
+  const stopAudio = useCallback(() => {
+    if (popupAudioRef.current) {
+      popupAudioRef.current.pause()
+      popupAudioRef.current.currentTime = 0
+    }
+    if (surveyAudioRef.current) {
+      surveyAudioRef.current.pause()
+      surveyAudioRef.current.currentTime = 0
+    }
+    setIsPlaying(false)
+    setCurrentTrack(null)
+    // Clear audio state from localStorage
+    if (typeof globalThis !== "undefined" && globalThis.window) {
+      localStorage.removeItem("audioState")
+    }
   }, [])
 
   const resumeTrack = useCallback(
@@ -217,6 +245,7 @@ export function AudioProvider({ children }: { readonly children: React.ReactNode
       playTrack,
       pauseTrack,
       pauseAll,
+      stopAudio,
       resumeTrack,
       showPopup,
       setShowPopup,
@@ -230,6 +259,7 @@ export function AudioProvider({ children }: { readonly children: React.ReactNode
       playTrack,
       pauseTrack,
       pauseAll,
+      stopAudio,
       resumeTrack,
       showPopup,
       saveAudioState,

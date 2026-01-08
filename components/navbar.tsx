@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAudio } from "@/context/audio-context"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Home, Map, Shield, Menu, X } from "lucide-react"
+import { Home, Map, Menu } from "lucide-react"
 import { useEffect, useState } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
@@ -15,6 +16,7 @@ import {
 
 export function Navbar() {
   const pathname = usePathname()
+  const { stopAudio } = useAudio()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
@@ -36,7 +38,13 @@ export function Navbar() {
         <Link
           key={href}
           href={href}
-          onClick={onClick}
+          onClick={() => {
+            // Stop audio when navigating to home
+            if (href === "/") {
+              stopAudio()
+            }
+            onClick?.()
+          }}
           className={cn(
             "text-sm font-medium transition-all hover:text-primary flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-primary/10",
             pathname === href ? "text-primary bg-primary/10" : "text-muted-foreground",
@@ -51,12 +59,14 @@ export function Navbar() {
   )
 
   const handleLogout = () => {
+    stopAudio() // Stop audio when logging out
     localStorage.removeItem("isAuthenticated")
     localStorage.removeItem("selectedState")
     localStorage.removeItem("selectedLga")
     localStorage.removeItem("surveyAnswers")
     localStorage.removeItem("currentSectionIndex")
-    window.location.href = "/"
+    localStorage.removeItem("audioState")
+    globalThis.location.href = "/"
   }
 
   return (

@@ -6,6 +6,7 @@ import { useEffect } from "react"
 
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useAudio } from "@/context/audio-context"
 import { motion, AnimatePresence, useMotionValue } from "framer-motion"
 import { Shield, Database, Brain, Users, TrendingUp, Lock, CheckCircle2, Award, Target, Zap } from "lucide-react"
 import NigeriaMap from "@/components/nigeria-map-svg"
@@ -18,16 +19,17 @@ import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 
-if (typeof window !== "undefined") {
+if (typeof globalThis !== "undefined" && globalThis.window) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 }
 
 const LandingPage: FC = () => {
   const router = useRouter()
+  const { stopAudio } = useAudio()
   const [isLoading, setIsLoading] = useState(true)
   const [showRollingText, setShowRollingText] = useState(false)
-  const [showImageMask, setShowImageMask] = useState(false)
   const [showAboutModal, setShowAboutModal] = useState(false)
+  const [showImageMask, setShowImageMask] = useState(false)
   const smoothWrapperRef = useRef<HTMLDivElement>(null)
   const smoothContentRef = useRef<HTMLDivElement>(null)
 
@@ -43,6 +45,11 @@ const LandingPage: FC = () => {
     mouseX.set(e.clientX - rect.left)
     mouseY.set(e.clientY - rect.top)
   }
+
+  // Stop audio when on homepage
+  useEffect(() => {
+    stopAudio()
+  }, [stopAudio])
 
   useEffect(() => {
     const timer = setTimeout(() => {

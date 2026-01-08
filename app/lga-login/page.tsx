@@ -16,7 +16,7 @@ import { nigerianStates, nigerianLGAs } from "@/lib/nigeria-data"
 
 export default function LGALogin() {
   const router = useRouter()
-  const { playTrack, setShowPopup, saveAudioState } = useAudio()
+  const { playTrack, setShowPopup, saveAudioState, restoreAudioState } = useAudio()
   const [step, setStep] = useState<"select" | "otp">("select")
   const [selectedState, setSelectedState] = useState("")
   const [selectedLGA, setSelectedLGA] = useState("")
@@ -28,8 +28,9 @@ export default function LGALogin() {
   // Start popup audio on page load
   useEffect(() => {
     setShowPopup(true) // Indicate popup state so popup audio plays
+    restoreAudioState() // Restore from previous navigation if available
     playTrack("popup") // Start playing popup audio
-  }, [playTrack, setShowPopup])
+  }, [playTrack, setShowPopup, restoreAudioState])
 
   // Save audio state before navigation
   useEffect(() => {
