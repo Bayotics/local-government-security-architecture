@@ -64,7 +64,7 @@ export const sections: Section[] = [
       },
       {
         id: "decision-4",
-        text: "Are there community reps in the Committee such as traditional rulers, community/youth/women leaders, faith based organisations, NGOs?",
+        text: "Are there community reps in the Committee such as traditional rulers, community/youth/women leaders, faith based organisations, Non-Governmental Organizationss?",
         section: "decision-making",
         options: [
           { id: "d4-1", text: "Yes", score: 1 },
@@ -208,7 +208,7 @@ export const sections: Section[] = [
       },
       {
         id: "instruments-7",
-        text: "Does the LGA have an MOU with government and/or non-governmental organisations on security provision?",
+        text: "Does the LGA have a Memorandum of Understanding (MOU) with government and/or non-governmental organisations on security provision?",
         section: "instruments",
         options: [
           { id: "i7-1", text: "Yes", score: 1 },
@@ -299,7 +299,7 @@ export const sections: Section[] = [
       },
       {
         id: "intelligence-5",
-        text: "Is security intelligence in the LGA enabled by technology such as drones, CCTV?",
+        text: "Is security intelligence in the LGA enabled by technology such as drones, Closed-Circuit Television (CCTV)?",
         section: "intelligence",
         options: [
           { id: "in5-1", text: "Yes", score: 1 },
@@ -541,7 +541,7 @@ export const sections: Section[] = [
       },
       {
         id: "institutions-7",
-        text: "Does the LG have ADR measures in place in times of conflict?",
+        text: "Does the LG have Alternative Dispute Resolution (ADR) measures in place in times of conflict?",
         section: "institutions",
         options: [
           { id: "inst7-1", text: "Yes", score: 1 },
@@ -551,7 +551,7 @@ export const sections: Section[] = [
       },
       {
         id: "institutions-8",
-        text: "Does the LG have facilities and equipment for security ISR?",
+        text: "Does the LG have facilities and equipment for security  Intelligence Surveillance and Reconnaissance (ISR)?",
         section: "institutions",
         options: [
           { id: "inst8-1", text: "Yes", score: 1 },
@@ -611,7 +611,7 @@ export const sections: Section[] = [
       },
       {
         id: "evaluation-3",
-        text: "Does the LG have the capacity to conduct routine security PMEs?",
+        text: "Does the LG have the capacity to conduct routine security Performance Measurement and Evaluation (PME)?",
         section: "evaluation",
         options: [
           { id: "e3-1", text: "Yes", score: 1 },
@@ -671,7 +671,7 @@ export const sections: Section[] = [
       },
       {
         id: "evaluation-9",
-        text: "Who does the LG report security PME to?",
+        text: "Who does the LG report security Performance Measurement and Evaluation (PME) to?",
         section: "evaluation",
         options: [
           { id: "e9-1", text: "State Govt", score: 1 },
