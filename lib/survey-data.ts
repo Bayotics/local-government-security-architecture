@@ -9,6 +9,7 @@ export interface Question {
   text: string
   section: string
   options: QuestionOption[]
+  allowMultiple?: boolean // Allow multiple selections for specific questions
 }
 
 export interface Section {
@@ -260,6 +261,7 @@ export const sections: Section[] = [
         id: "intelligence-1",
         text: "Which organisations are responsible for security intelligence gathering in the LGA?",
         section: "intelligence",
+        allowMultiple: true,
         options: [
           { id: "in1-1", text: "NPF", score: 1 },
           { id: "in1-2", text: "DSS", score: 1 },
@@ -291,6 +293,7 @@ export const sections: Section[] = [
         id: "intelligence-4",
         text: "Which entities are part of this organisation?",
         section: "intelligence",
+        allowMultiple: true,
         options: [
           { id: "in4-1", text: "Trad Ruler", score: 1 },
           { id: "in4-2", text: "Cmmty Ldr", score: 1 },
@@ -341,6 +344,7 @@ export const sections: Section[] = [
         id: "intelligence-9",
         text: "Which medium is typically used for dissemination of security early warning?",
         section: "intelligence",
+        allowMultiple: true,
         options: [
           { id: "in9-1", text: "Radio", score: 1 },
           { id: "in9-2", text: "TV", score: 1 },

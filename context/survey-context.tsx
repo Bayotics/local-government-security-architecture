@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import { sections, calculateLSAr } from "@/lib/survey-data"
 
 interface SurveyContextType {
-  answers: Record<string, string> // Changed from number to string to store option IDs
+  answers: Record<string, string | string[]> // string for single select, string[] for multi-select
   setAnswer: (questionId: string, optionId: string) => void
   currentSectionIndex: number
   setCurrentSectionIndex: (index: number) => void
@@ -17,12 +17,13 @@ interface SurveyContextType {
   selectedLga: string | null
   setSelectedState: (state: string | null) => void
   setSelectedLga: (lga: string | null) => void
+  getAnswersForQuestion: (questionId: string) => string[]
 }
 
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined)
 
 export function SurveyProvider({ children }: { children: React.ReactNode }) {
-  const [answers, setAnswers] = useState<Record<string, string>>({}) // Changed to string
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({}) // Changed to string
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0)
   const [selectedState, setSelectedState] = useState<string | null>(null)
   const [selectedLga, setSelectedLga] = useState<string | null>(null)
@@ -78,9 +79,50 @@ export function SurveyProvider({ children }: { children: React.ReactNode }) {
 
   const setAnswer = (questionId: string, optionId: string) => {
     setAnswers((prev) => {
-      const newAnswers = { ...prev, [questionId]: optionId }
-      return newAnswers
+      const question = sections.flatMap(s => s.questions).find(q => q.id === questionId)
+      
+      if (!question || !question.allowMultiple) {
+        // Single select - original behavior
+        const newAnswers = { ...prev, [questionId]: optionId }
+        return newAnswers
+      }
+
+      // Multi-select logic
+      const currentAnswers = prev[questionId] as string[] || []
+      const selectedOption = question.options.find(opt => opt.id === optionId)
+      const isUnsureOption = selectedOption?.text === "Unsure"
+      
+      const hasUnsure = currentAnswers.some(id => {
+        const opt = question.options.find(opt => opt.id === id)
+        return opt?.text === "Unsure"
+      })
+
+      if (isUnsureOption) {
+        // User clicked Unsure - clear all other selections
+        return { ...prev, [questionId]: [optionId] }
+      }
+
+      if (hasUnsure) {
+        // Unsure is currently selected, remove it and add new option
+        return { ...prev, [questionId]: [optionId] }
+      }
+
+      // Toggle regular option
+      if (currentAnswers.includes(optionId)) {
+        const updated = currentAnswers.filter(id => id !== optionId)
+        return { ...prev, [questionId]: updated.length === 0 ? [] : updated }
+      } else {
+        return { ...prev, [questionId]: [...currentAnswers, optionId] }
+      }
     })
+  }
+
+  const getAnswersForQuestion = (questionId: string): string[] => {
+    const answer = answers[questionId]
+    if (Array.isArray(answer)) {
+      return answer
+    }
+    return answer ? [answer as string] : []
   }
 
   const getSectionScore = (sectionId: string): number => {
@@ -91,13 +133,27 @@ export function SurveyProvider({ children }: { children: React.ReactNode }) {
     let answeredQuestions = 0
 
     section.questions.forEach((question) => {
-      const selectedOptionId = answers[question.id]
-      if (selectedOptionId) {
-        const selectedOption = question.options.find((opt) => opt.id === selectedOptionId)
-        if (selectedOption) {
-          totalScore += selectedOption.score
-          answeredQuestions++
+      const answerIds = getAnswersForQuestion(question.id)
+      
+      if (answerIds.length > 0) {
+        if (question.allowMultiple) {
+          // Multi-select question: always score 1 regardless of how many options selected
+          // unless Unsure is selected, then score 0
+          const hasUnsure = answerIds.some(id => {
+            const opt = question.options.find(opt => opt.id === id)
+            return opt?.text === "Unsure"
+          })
+          totalScore += hasUnsure ? 0 : 1
+        } else {
+          // Single select: original behavior - sum individual scores
+          answerIds.forEach(selectedOptionId => {
+            const selectedOption = question.options.find((opt) => opt.id === selectedOptionId)
+            if (selectedOption) {
+              totalScore += selectedOption.score
+            }
+          })
         }
+        answeredQuestions++
       }
     })
 
@@ -143,6 +199,7 @@ export function SurveyProvider({ children }: { children: React.ReactNode }) {
         selectedLga,
         setSelectedState,
         setSelectedLga,
+        getAnswersForQuestion,
       }}
     >
       {children}

@@ -26,6 +26,7 @@ export default function SurveyPage() {
     isComplete,
     selectedState,
     selectedLga,
+    getAnswersForQuestion,
   } = useSurvey()
   const { playTrack, setShowPopup, restoreAudioState, saveAudioState } = useAudio()
 
@@ -280,7 +281,12 @@ export default function SurveyPage() {
                         <div className="w-full lg:w-3/5 flex-shrink-0 pr-5">
                           <QuestionOptions
                             question={question}
-                            selectedOptionId={answers[question.id]}
+                            selectedOptionId={
+                              question.allowMultiple ? undefined : (answers[question.id] as string)
+                            }
+                            selectedOptionIds={
+                              question.allowMultiple ? getAnswersForQuestion(question.id) : undefined
+                            }
                             onChange={(optionId) => setAnswer(question.id, optionId)}
                           />
                         </div>
