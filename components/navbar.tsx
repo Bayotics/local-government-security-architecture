@@ -90,6 +90,21 @@ export function Navbar() {
             <nav className="flex flex-col gap-4 mt-6">
               <NavLinks onClick={() => setIsOpen(false)} className="w-full" />
             </nav>
+
+            <div className="mt-8 flex items-center justify-between">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsOpen(false)
+                  handleLogout()
+                }}
+                className="hover:bg-destructive hover:text-destructive-foreground transition-all"
+              >
+                Logout
+              </Button>
+            </div>
           </SheetContent>
         </Sheet>
 

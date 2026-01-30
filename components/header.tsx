@@ -2,17 +2,20 @@
 
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { UserCircle } from "lucide-react"
+import { Menu, UserCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 import Logo from "./logo"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 export default function Header() {
   const router = useRouter()
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const isHomepage = pathname === "/"
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -64,50 +67,110 @@ export default function Header() {
               </span>
             </Link>
 
-            <Link href="/admin/login" className="ml-10">
-              <button
-                className={cn(
-                  "px-4 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-light flex items-center gap-2",
-                  isHomepage
-                    ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white"
-                    : isLightMode
-                      ? "bg-muted/50 border-border hover:bg-muted hover:border-primary/40 text-foreground"
-                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white/90",
-                )}
-              >
-                <UserCircle className="h-4 w-4" />
-                Admin Signin
-              </button>
-            </Link>
+            {/* Desktop Links */}
+            <div className="hidden md:flex items-center gap-4">
+              <Link href="/admin/login" className="ml-10">
+                <button
+                  className={cn(
+                    "px-4 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-light flex items-center gap-2",
+                    isHomepage
+                      ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white"
+                      : isLightMode
+                        ? "bg-muted/50 border-border hover:bg-muted hover:border-primary/40 text-foreground"
+                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white/90",
+                  )}
+                >
+                  <UserCircle className="h-4 w-4" />
+                  Admin Signin
+                </button>
+              </Link>
 
-            <Link href="/how-it-works">
+              <Link href="/how-it-works">
+                <button
+                  className={cn(
+                    "px-4 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-light",
+                    isHomepage
+                      ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white"
+                      : isLightMode
+                        ? "bg-muted/50 border-border hover:bg-muted hover:border-primary/40 text-foreground font-medium"
+                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white/90",
+                  )}
+                >
+                  How it Works
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Desktop CTA */}
+          <div className="hidden md:block">
+            <Link href="/lga-login">
               <button
                 className={cn(
-                  "px-4 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-light",
-                  isHomepage
-                    ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white"
-                    : isLightMode
-                      ? "bg-muted/50 border-border hover:bg-muted hover:border-primary/40 text-foreground font-medium"
-                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white/90",
+                  "px-6 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-medium",
+                  isHomepage || !isLightMode
+                    ? "bg-[#34D399]/10 border-[#34D399]/30 hover:bg-[#34D399]/20 hover:border-[#34D399]/50 text-[#34D399]"
+                    : "bg-primary/20 border-primary/40 hover:bg-primary/30 hover:border-primary/60 text-primary",
                 )}
               >
-                How it Works
+                Take Survey Now
               </button>
             </Link>
           </div>
 
-          <Link href="/lga-login">
-            <button
-              className={cn(
-                "px-6 py-2 rounded-lg backdrop-blur-md border transition-all text-sm font-medium",
-                isHomepage || !isLightMode
-                  ? "bg-[#34D399]/10 border-[#34D399]/30 hover:bg-[#34D399]/20 hover:border-[#34D399]/50 text-[#34D399]"
-                  : "bg-primary/20 border-primary/40 hover:bg-primary/30 hover:border-primary/60 text-primary",
-              )}
-            >
-              Take Survey Now
-            </button>
-          </Link>
+          {/* Mobile Hamburger */}
+          <div className="md:hidden">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className={cn(isHomepage || !isLightMode ? "text-white" : "text-foreground")}>
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className={cn("w-80", isHomepage || !isLightMode ? "bg-black" : "bg-background")}>
+                <div className="mt-6 flex flex-col gap-3">
+                  <Link href="/how-it-works" onClick={() => setIsMobileMenuOpen(false)}>
+                    <button
+                      className={cn(
+                        "w-full px-4 py-3 rounded-lg backdrop-blur-md border transition-all text-sm font-medium",
+                        isHomepage || !isLightMode
+                          ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white"
+                          : "bg-muted/50 border-border hover:bg-muted hover:border-primary/40 text-foreground",
+                      )}
+                    >
+                      How it Works
+                    </button>
+                  </Link>
+
+                  <Link href="/admin/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <button
+                      className={cn(
+                        "w-full px-4 py-3 rounded-lg backdrop-blur-md border transition-all text-sm font-medium flex items-center justify-center gap-2",
+                        isHomepage || !isLightMode
+                          ? "bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#34D399]/30 text-white"
+                          : "bg-muted/50 border-border hover:bg-muted hover:border-primary/40 text-foreground",
+                      )}
+                    >
+                      <UserCircle className="h-4 w-4" />
+                      Admin Signin
+                    </button>
+                  </Link>
+
+                  <Link href="/lga-login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <button
+                      className={cn(
+                        "w-full px-4 py-3 rounded-lg backdrop-blur-md border transition-all text-sm font-semibold",
+                        isHomepage || !isLightMode
+                          ? "bg-[#34D399]/10 border-[#34D399]/30 hover:bg-[#34D399]/20 hover:border-[#34D399]/50 text-[#34D399]"
+                          : "bg-primary/20 border-primary/40 hover:bg-primary/30 hover:border-primary/60 text-primary",
+                      )}
+                    >
+                      Take Survey Now
+                    </button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </motion.header>

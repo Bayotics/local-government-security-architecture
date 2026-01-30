@@ -4,15 +4,106 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Play, X } from "lucide-react"
 
+type VideoErrorInfo = {
+  title: string
+  message: string
+  diagnostics?: string
+}
+
+function formatMediaErrorCode(code?: number | null) {
+  switch (code) {
+    case 1:
+      return "MEDIA_ERR_ABORTED"
+    case 2:
+      return "MEDIA_ERR_NETWORK"
+    case 3:
+      return "MEDIA_ERR_DECODE"
+    case 4:
+      return "MEDIA_ERR_SRC_NOT_SUPPORTED"
+    default:
+      return "UNKNOWN"
+  }
+}
+
+function buildDiagnostics(video: HTMLVideoElement, sources: Array<{ src: string; type?: string }>) {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "(no navigator)"
+  const canPlay = (type?: string) => (type ? video.canPlayType(type) : "(no type)")
+
+  const lines = [
+    `userAgent=${ua}`,
+    `currentSrc=${video.currentSrc || "(empty)"}`,
+    `readyState=${video.readyState}`,
+    `networkState=${video.networkState}`,
+    `errorCode=${video.error?.code ?? "(none)"} (${formatMediaErrorCode(video.error?.code)})`,
+    `videoWidth=${video.videoWidth}`,
+    `videoHeight=${video.videoHeight}`,
+    "sources:",
+    ...sources.map((s) => `- ${s.type || "(no type)"} | canPlayType=${canPlay(s.type)} | ${s.src}`),
+    `probe canPlayType(video/mp4; codecs="avc1.42E01E, mp4a.40.2")=${video.canPlayType(
+      'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+    )}`,
+  ]
+
+  return lines.join("\n")
+}
+
 interface VideoSectionProps {
   videoUrl?: string
+  videoSources?: Array<{ src: string; type?: string }>
   thumbnailUrl?: string
 }
 
 export default function VideoSection({
-  videoUrl = "https://github.com/Bayotics/local-government-security-architecture/releases/download/video-update/copy_AC733518-42AB-4018-BD7B-E005EC819E1C.mov",
+  videoUrl,
+  videoSources,
 }: VideoSectionProps) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [errorInfo, setErrorInfo] = useState<VideoErrorInfo | null>(null)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
+
+  const proxyUrl = "/api/how-it-works-video"
+  const fallbackMp4Url =
+    "https://github.com/Bayotics/local-government-security-architecture/releases/download/video/lsat-how-it-works-nigerian-voice.mp4"
+  const envMp4Url = process.env.NEXT_PUBLIC_HOW_IT_WORKS_VIDEO_MP4_URL || process.env.NEXT_PUBLIC_HOW_IT_WORKS_VIDEO_URL
+
+  const sources =
+    videoSources && videoSources.length > 0
+      ? videoSources
+      : [
+          { src: proxyUrl, type: "video/mp4" },
+          ...(envMp4Url ? [{ src: envMp4Url, type: "video/mp4" }] : []),
+          { src: videoUrl || fallbackMp4Url, type: "video/mp4" },
+        ]
+
+  const primaryUrl = sources[0]?.src
+
+  const reportError = (video: HTMLVideoElement | null, reason?: string) => {
+    const code = video?.error?.code
+    const codeLabel = formatMediaErrorCode(code)
+
+    let title = "This video can’t be played in this browser"
+    let message =
+      "This usually happens when the video is encoded with an unsupported codec (common: H.265/HEVC). Re-export as MP4 (H.264 + AAC) with ‘fast start’ enabled."
+
+    if (codeLabel === "MEDIA_ERR_NETWORK") {
+      message = "The video couldn’t be loaded due to a network/permissions issue. Check the URL and try again."
+    } else if (codeLabel === "MEDIA_ERR_SRC_NOT_SUPPORTED") {
+      message = "The browser does not support this video format or codec. Use MP4 (H.264 + AAC) or provide a WebM fallback."
+    } else if (codeLabel === "MEDIA_ERR_DECODE") {
+      message = "The video loaded but could not be decoded (codec not supported or file is corrupted). Use MP4 (H.264 + AAC)."
+    }
+
+    if (reason) {
+      message = `${message}\n\nDetected: ${reason}`
+    }
+
+    const diagnostics = video ? buildDiagnostics(video, sources) : undefined
+    console.error("[HowItWorksVideo] playback error", { code, codeLabel, reason, diagnostics })
+
+    setHasError(true)
+    setErrorInfo({ title, message, diagnostics })
+  }
 
   return (
     <>
@@ -141,9 +232,62 @@ export default function VideoSection({
 
               {/* Video Player */}
               <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black shadow-2xl">
-                <video src={videoUrl} controls autoPlay className="w-full h-full" onEnded={() => setIsPlaying(false)}>
+                <video
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full"
+                  onEnded={() => setIsPlaying(false)}
+                  onLoadedMetadata={(e) => {
+                    const video = e.currentTarget
+                    if (video.videoWidth === 0 || video.videoHeight === 0) {
+                      reportError(video, "Video track appears unsupported (audio-only).")
+                    }
+                  }}
+                  onError={(e) => reportError(e.currentTarget, "Video failed to decode/load.")}
+                >
+                  {sources.map((source) => (
+                    <source key={source.src} src={source.src} type={source.type} />
+                  ))}
                   Your browser does not support the video tag.
                 </video>
+
+                {hasError && (errorInfo || primaryUrl) && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-6 text-center">
+                    <div className="max-w-md">
+                      <p className="text-white font-medium">{errorInfo?.title || "This video can’t be played in this browser."}</p>
+                      <p className="text-white/70 text-sm mt-2 whitespace-pre-line">{errorInfo?.message || "Try opening it directly."}</p>
+
+                      <div className="mt-4 flex items-center justify-center gap-3">
+                        {primaryUrl && (
+                          <a
+                            href={primaryUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
+                          >
+                            Open video
+                          </a>
+                        )}
+                        {errorInfo?.diagnostics && (
+                          <button
+                            onClick={() => setShowDiagnostics((v) => !v)}
+                            className="inline-flex px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
+                          >
+                            {showDiagnostics ? "Hide details" : "Show details"}
+                          </button>
+                        )}
+                      </div>
+
+                      {showDiagnostics && errorInfo?.diagnostics && (
+                        <pre className="mt-4 max-h-48 overflow-auto rounded-lg bg-black/40 p-3 text-left text-xs text-white/80 whitespace-pre-wrap">
+                          {errorInfo.diagnostics}
+                        </pre>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Video Info */}
