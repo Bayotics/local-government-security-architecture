@@ -67,7 +67,7 @@ export default function VideoSection({
     "https://github.com/Bayotics/local-government-security-architecture/releases/download/video/lsat-how-it-works-nigerian-voice.mp4"
   const envMp4Url = process.env.NEXT_PUBLIC_HOW_IT_WORKS_VIDEO_MP4_URL || process.env.NEXT_PUBLIC_HOW_IT_WORKS_VIDEO_URL
 
-  const sources =
+  const rawSources =
     videoSources && videoSources.length > 0
       ? videoSources
       : [
@@ -75,6 +75,10 @@ export default function VideoSection({
           ...(envMp4Url ? [{ src: envMp4Url, type: "video/mp4" }] : []),
           { src: videoUrl || fallbackMp4Url, type: "video/mp4" },
         ]
+
+  const sources = rawSources.filter(
+    (source, index, array) => array.findIndex((s) => s.src === source.src && s.type === source.type) === index,
+  )
 
   const primaryUrl = sources[0]?.src
 
@@ -248,7 +252,7 @@ export default function VideoSection({
                   onError={(e) => reportError(e.currentTarget, "Video failed to decode/load.")}
                 >
                   {sources.map((source) => (
-                    <source key={source.src} src={source.src} type={source.type} />
+                    <source key={`${source.src}-${source.type ?? "no-type"}`} src={source.src} type={source.type} />
                   ))}
                   Your browser does not support the video tag.
                 </video>

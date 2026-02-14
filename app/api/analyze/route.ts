@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { generateOpenAIText, getOpenAIModelName } from "@/lib/openai"
 import { sections, getScoreFromOptionId } from "@/lib/survey-data"
 
 export async function POST(req: NextRequest) {
@@ -48,17 +47,10 @@ export async function POST(req: NextRequest) {
     })
 
     const prompt = `
-      You are a skilled human writer who naturally connect with readers through pragmatic, conversational content. 
-      You write like you're having a real conversation with someone you genuinly care about proferring solutions for.
-      - Use a conversational tone
-      - Keep language simple - explain things like you would to a friend over a cup of coffee
-      - Use relatable metaphors instead of jargon or AI buzzwords
-      - connect emotionally first, then provide value. 
-      - Write like you've actually lived through what you are discussing. 
-  
+      You are a professional local security policy analyst. Produce a formal, direct, and evidence-based report.
 
-      Now, I just completed a local government security architecture survey for ${lga} Local Government 
-      in ${state} State, Nigeria. and I need a comprehensive security analysis.
+      Now, I just completed a local government security architecture survey for ${lga} Local Government
+      in ${state} State, Nigeria, and I need a comprehensive security analysis.
       
       Here are the percentage scores for each Local Security Architecture (LSAr) dimension:
       ${Object.entries(sectionScores)
@@ -75,19 +67,28 @@ export async function POST(req: NextRequest) {
         )
         .join("\n")}
       
-      Based on this Local Security Architecture Rating (LSAr) assessment, please provide:
+      Based on this Local Security Architecture Rating (LSAr) assessment, provide:
       1. A summary of the local security assessment status in ${lga} Local Government
       2. Key strengths identified from the assessment (areas with scores above 60%)
       3. Critical deficits and vulnerabilities in each dimension (areas with scores below 40%)
       4. Priority areas that need immediate attention (lowest scoring dimensions)
       5. Specific, actionable recommendations to improve local security architecture in ${lga}
-      
-      Note that the scoring is based on LSAr methodology where scores represent percentage of optimal local security architecture
-      Avoid Usage of **, ### and so on for font stylings or line breaks like /n so texts can be parsed easily from your response
-      Lastly, Eliminate the use of bullets completely. Use numbering instead across your response.
+
+      Hard style rules (must follow):
+      1. Do not use first-person or assistant voice. Never use: "I", "I'll", "I can", "we can", "if you'd like", "let me know", "I can also".
+      2. Do not include offers for further help, optional next steps, or add-on deliverables.
+      3. Do not include meta-commentary about writing style (for example: "I’ll be blunt", "I’ll be direct", "as an AI").
+      4. End with a final numbered section titled exactly "Final Position" that gives a decisive close in 2-4 sentences.
+      5. The response must end immediately after "Final Position" with no extra sentence.
+
+      Output rules:
+      - Use numbering only throughout (no bullets).
+      - Avoid **, ###, markdown styling, and escape characters like /n.
+      - Keep total response under 1800 words.
+      - Note that scores represent percentage of optimal local security architecture under LSAr methodology.
     `
 
-    console.log("Calling OpenAI API with model: gpt-4o-mini")
+    console.log(`Calling OpenAI API with model: ${getOpenAIModelName()}`)
 
     try {
       // Explicitly set the API key for debugging purposes
@@ -100,11 +101,11 @@ export async function POST(req: NextRequest) {
 
       console.log("API Key available:", apiKey ? "Yes (first 4 chars: " + apiKey.substring(0, 4) + "...)" : "No")
 
-      const { text } = await generateText({
-        model: openai("gpt-4o-mini"),
+      const modelName = getOpenAIModelName()
+      const text = await generateOpenAIText({
         prompt,
-        temperature: 0.7,
-        maxTokens: 2000,
+        maxTokens: 4000,
+        temperature: modelName.toLowerCase().startsWith("gpt-5") ? undefined : 0.7,
       })
 
       console.log("OpenAI API response received, length:", text.length)

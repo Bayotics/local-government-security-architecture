@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
-import { openai } from "@ai-sdk/openai"
-import { generateText } from "ai"
+import { generateOpenAIText, getOpenAIModelName } from "@/lib/openai"
 
 export async function POST(request: Request) {
   try {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: "OpenAI API key is not configured" }, { status: 500 })
+    }
+
     const { currentLga, neighboringLGAs } = await request.json()
 
     if (!currentLga || !neighboringLGAs || neighboringLGAs.length === 0) {
@@ -28,18 +32,18 @@ Based on the neighboring LGAs' security ratings, provide a concise advisory (3-4
 
 Keep the tone professional, conversational and constructive. Avoid buzzwords.`
 
-    const { text } = await generateText({
-      model: openai("gpt-4o-mini"),
-      prompt: prompt,
-      temperature: 0.7,
+    const modelName = getOpenAIModelName()
+    const text = await generateOpenAIText({
+      prompt,
       maxTokens: 500,
+      temperature: modelName.toLowerCase().startsWith("gpt-5") ? undefined : 0.7,
     })
 
     return NextResponse.json({ advisory: text })
   } catch (error: any) {
     console.error("Error generating neighboring advisory:", error)
     return NextResponse.json(
-      { error: error.message || "Failed to generate advisory" },
+      { error: "Failed to generate advisory", message: error.message || String(error) },
       { status: 500 }
     )
   }

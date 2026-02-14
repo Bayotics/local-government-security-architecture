@@ -269,7 +269,7 @@ const LandingPage: FC = () => {
                       <ShinyRotatingBorderButton />
                     </motion.div>
 
-                    <motion.p
+                    <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.6, delay: 0.8 }}
@@ -304,7 +304,7 @@ const LandingPage: FC = () => {
                         </div>
                         Trusted by Security Professionals and Policy Makers
                       </div>
-                    </motion.p>
+                    </motion.div>
                   </motion.div>
 
                   {/* Right Content - Interactive Nigeria Map */}

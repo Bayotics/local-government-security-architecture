@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { generateOpenAIText, getOpenAIModelName } from "@/lib/openai"
 
 export async function POST() {
   try {
@@ -16,11 +15,11 @@ export async function POST() {
     console.log("API Key available:", apiKey ? "Yes (first 4 chars: " + apiKey.substring(0, 4) + "...)" : "No")
 
     try {
-      const { text } = await generateText({
-        model: openai("gpt-4o-mini"),
+      const modelName = getOpenAIModelName()
+      const text = await generateOpenAIText({
         prompt: "Say 'Hello, the OpenAI API is working!' in a single short sentence.",
-        temperature: 0.5,
         maxTokens: 50,
+        temperature: modelName.toLowerCase().startsWith("gpt-5") ? undefined : 0.5,
       })
 
       console.log("OpenAI API test response:", text)

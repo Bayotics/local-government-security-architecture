@@ -45,7 +45,8 @@ export function useNeighboringAdvisory(
         })
 
         if (!response.ok) {
-          throw new Error("Failed to generate advisory")
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || errorData.error || "Failed to generate advisory")
         }
 
         const data = await response.json()
