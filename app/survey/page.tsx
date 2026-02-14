@@ -19,6 +19,7 @@ const QUESTIONS_PER_PAGE = 5
 export default function SurveyPage() {
   const router = useRouter()
   const {
+    isHydrated,
     answers,
     setAnswer,
     currentSectionIndex,
@@ -28,7 +29,7 @@ export default function SurveyPage() {
     selectedLga,
     getAnswersForQuestion,
   } = useSurvey()
-  const { playTrack, setShowPopup, restoreAudioState, saveAudioState } = useAudio()
+  const { playTrack, setShowPopup, saveAudioState } = useAudio()
 
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [progress, setProgress] = useState(0)
@@ -40,34 +41,25 @@ export default function SurveyPage() {
 
   useEffect(() => {
     setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted || !isHydrated) return
+
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
     if (!isAuthenticated) {
       router.push("/")
       return
     }
 
-    const checkLocation = setTimeout(() => {
-      const stateFromStorage = localStorage.getItem("selectedState")
-      const lgaFromStorage = localStorage.getItem("selectedLga")
+    if (!selectedState || !selectedLga) {
+      router.push("/select-location")
+    }
+  }, [isMounted, isHydrated, selectedState, selectedLga, router])
 
-      const hasState = selectedState || stateFromStorage
-      const hasLga = selectedLga || lgaFromStorage
-
-      if (!hasState || !hasLga) {
-        router.push("/select-location")
-      } else if (!selectedState && stateFromStorage) {
-        globalThis.location.reload()
-      }
-    }, 500)
-
-    return () => clearTimeout(checkLocation)
-  }, [selectedState, selectedLga, router])
-
-  // Initialize audio on mount
   useEffect(() => {
-    if (!isMounted) return
-    restoreAudioState()
-  }, [isMounted, restoreAudioState])
+    router.prefetch("/survey/results")
+  }, [router])
 
   useEffect(() => {
     if (!isMounted) return
@@ -135,7 +127,6 @@ export default function SurveyPage() {
       setCurrentPageIndex(0)
     } else if (isComplete) {
       setIsNavigating(true)
-      saveAudioState() // Save audio state before navigation
       router.push("/survey/results")
     }
   }

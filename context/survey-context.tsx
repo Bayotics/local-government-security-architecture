@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import { sections, calculateLSAr } from "@/lib/survey-data"
 
 interface SurveyContextType {
+  isHydrated: boolean
   answers: Record<string, string | string[]> // string for single select, string[] for multi-select
   setAnswer: (questionId: string, optionId: string) => void
   currentSectionIndex: number
@@ -23,6 +24,7 @@ interface SurveyContextType {
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined)
 
 export function SurveyProvider({ children }: { children: React.ReactNode }) {
+  const [isHydrated, setIsHydrated] = useState(false)
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({}) // Changed to string
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0)
   const [selectedState, setSelectedState] = useState<string | null>(null)
@@ -63,6 +65,8 @@ export function SurveyProvider({ children }: { children: React.ReactNode }) {
         setSelectedLga(lga)
       }
     }
+
+    setIsHydrated(true)
   }, [])
 
   // Save to localStorage when answers change
@@ -187,6 +191,7 @@ export function SurveyProvider({ children }: { children: React.ReactNode }) {
   return (
     <SurveyContext.Provider
       value={{
+        isHydrated,
         answers,
         setAnswer,
         currentSectionIndex,

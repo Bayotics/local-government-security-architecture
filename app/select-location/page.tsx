@@ -30,7 +30,7 @@ interface LGAScore {
 
 export default function SelectLocation() {
   const router = useRouter()
-  const { setShowPopup, restoreAudioState, saveAudioState } = useAudio()
+  const { setShowPopup, saveAudioState } = useAudio()
   const [selectedState, setSelectedState] = useState<string>("")
   const [selectedLga, setSelectedLga] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(true)
@@ -49,9 +49,6 @@ export default function SelectLocation() {
       return
     }
 
-    // Restore audio state from navigation
-    restoreAudioState()
-    
     // Keep popup state since we're still in the popup context
     setShowPopup(true)
 
@@ -65,7 +62,11 @@ export default function SelectLocation() {
     }
     
     setLoading(false)
-  }, [router, setShowPopup, restoreAudioState])
+  }, [router, setShowPopup])
+
+  useEffect(() => {
+    router.prefetch("/survey")
+  }, [router])
 
   // Save audio state before navigation
   useEffect(() => {
@@ -140,9 +141,6 @@ export default function SelectLocation() {
       localStorage.removeItem("currentSectionIndex")
       localStorage.setItem("selectedState", selectedState)
       localStorage.setItem("selectedLga", selectedLga)
-      
-      // Save audio state before navigation
-      saveAudioState()
       
       router.push("/survey")
     }

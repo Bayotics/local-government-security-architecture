@@ -19,8 +19,8 @@ import { generatePDFReport } from "@/lib/pdf-report-generator"
 
 export default function ResultsPage() {
   const router = useRouter()
-  const { answers, selectedState, selectedLga } = useSurvey()
-  const { setShowPopup, restoreAudioState, playTrack, saveAudioState } = useAudio()
+  const { isHydrated, answers, selectedState, selectedLga } = useSurvey()
+  const { setShowPopup, playTrack, saveAudioState } = useAudio()
   const [analysis, setAnalysis] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -43,6 +43,8 @@ export default function ResultsPage() {
 
   // Authentication check
   useEffect(() => {
+    if (!isHydrated) return
+
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
     if (!isAuthenticated) {
       router.push("/")
@@ -54,9 +56,6 @@ export default function ResultsPage() {
       return
     }
 
-    // Restore audio state from navigation
-    restoreAudioState()
-    
     // Set popup state to false since we're no longer in popup
     setShowPopup(false)
     
@@ -71,7 +70,7 @@ export default function ResultsPage() {
     if (!isComplete) {
       router.push("/survey")
     }
-  }, [answers, selectedState, selectedLga, router, restoreAudioState, setShowPopup, playTrack])
+  }, [isHydrated, answers, selectedState, selectedLga, router, setShowPopup, playTrack])
 
   // Save audio state before navigation
   useEffect(() => {
@@ -226,13 +225,11 @@ export default function ResultsPage() {
             analysis={analysis}
             downloadingPdf={downloadingPdf}
             onBackToSurvey={() => {
-              saveAudioState()
               router.push("/survey")
             }}
             onStartNewSurvey={() => {
               localStorage.removeItem("surveyAnswers")
               localStorage.removeItem("currentSectionIndex")
-              saveAudioState()
               router.push("/select-location")
             }}
             onDownloadReport={downloadReport}
