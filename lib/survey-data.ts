@@ -349,6 +349,7 @@ export const sections: Section[] = [
           { id: "in9-1", text: "Radio", score: 1 },
           { id: "in9-2", text: "TV", score: 1 },
           { id: "in9-3", text: "Oral tradition", score: 1 },
+          { id: "in9-5", text: "Telephone", score: 1 },
           { id: "in9-4", text: "Unsure", score: 0 },
         ],
       },

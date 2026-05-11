@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,6 +38,18 @@ export default function SurveyPage() {
   const [hasShownQuotation, setHasShownQuotation] = useState<Set<number>>(new Set())
   const questionsPerPage = 5
   const [isMounted, setIsMounted] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const wasAnsweredRef = useRef(false)
+
+  // Derived values – declared before effects so dependency arrays are valid
+  const currentSection = sections[currentSectionIndex]
+  const totalQuestionsInSection = currentSection?.questions.length || 0
+  const startIndex = currentPageIndex * questionsPerPage
+  const endIndex = Math.min(startIndex + questionsPerPage, totalQuestionsInSection)
+  const currentQuestions = currentSection?.questions.slice(startIndex, endIndex) || []
+  const totalPages = Math.ceil(totalQuestionsInSection / questionsPerPage)
+  const areCurrentQuestionsAnswered = currentQuestions.every((question) => answers[question.id] !== undefined)
+  const isLastPage = currentSectionIndex === sections.length - 1 && currentPageIndex === totalPages - 1
 
   useEffect(() => {
     setIsMounted(true)
@@ -84,7 +96,40 @@ export default function SurveyPage() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" })
+    // Reset countdown and answered-tracker on page/section change
+    setCountdown(null)
+    // Initialise ref: if all questions are already answered when arriving at this page, don't auto-start
+    wasAnsweredRef.current = false
   }, [currentPageIndex, currentSectionIndex])
+
+  // Start countdown when the last unanswered question on the page is answered
+  useEffect(() => {
+    if (areCurrentQuestionsAnswered && !wasAnsweredRef.current && !isLastPage) {
+      wasAnsweredRef.current = true
+      setCountdown(5)
+    }
+    if (!areCurrentQuestionsAnswered) {
+      wasAnsweredRef.current = false
+      setCountdown(null)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areCurrentQuestionsAnswered, isLastPage])
+
+  // Countdown tick
+  useEffect(() => {
+    if (countdown === null || countdown <= 0) return
+    const timer = setTimeout(() => setCountdown((c) => (c !== null ? c - 1 : null)), 1000)
+    return () => clearTimeout(timer)
+  }, [countdown])
+
+  // Fire auto-advance when countdown reaches 0
+  useEffect(() => {
+    if (countdown === 0) {
+      setCountdown(null)
+      goToNextPage()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdown])
 
   // Save audio state before navigation
   useEffect(() => {
@@ -98,14 +143,25 @@ export default function SurveyPage() {
     }
   }, [saveAudioState])
 
-  const currentSection = sections[currentSectionIndex]
-  const totalQuestionsInSection = currentSection?.questions.length || 0
-  const startIndex = currentPageIndex * questionsPerPage
-  const endIndex = Math.min(startIndex + questionsPerPage, totalQuestionsInSection)
-  const currentQuestions = currentSection?.questions.slice(startIndex, endIndex) || []
-  const totalPages = Math.ceil(totalQuestionsInSection / questionsPerPage)
+  const cancelCountdown = () => {
+    setCountdown(null)
+    wasAnsweredRef.current = true // prevent restarting for this page
+  }
 
-  const areCurrentQuestionsAnswered = currentQuestions.every((question) => answers[question.id] !== undefined)
+  const handleAnswer = (questionId: string, optionId: string) => {
+    setAnswer(questionId, optionId)
+    // Scroll to the next unanswered question (first question after this one that has no answer yet)
+    setTimeout(() => {
+      const currentIndex = currentQuestions.findIndex((q) => q.id === questionId)
+      const nextQuestion = currentQuestions.find(
+        (q, i) => i > currentIndex && answers[q.id] === undefined && q.id !== questionId
+      )
+      if (nextQuestion) {
+        const el = document.getElementById(`question-${nextQuestion.id}`)
+        el?.scrollIntoView({ behavior: "smooth", block: "center" })
+      }
+    }, 80)
+  }
 
   const handleQuotationContinue = () => {
     setShowQuotation(false)
@@ -130,8 +186,6 @@ export default function SurveyPage() {
       router.push("/survey/results")
     }
   }
-
-  const isLastPage = currentSectionIndex === sections.length - 1 && currentPageIndex === totalPages - 1
 
   const getNextButtonContent = () => {
     if (isLastPage) {
@@ -250,6 +304,7 @@ export default function SurveyPage() {
                   {currentQuestions.map((question, index) => (
                     <motion.div
                       key={question.id}
+                      id={`question-${question.id}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -278,7 +333,7 @@ export default function SurveyPage() {
                             selectedOptionIds={
                               question.allowMultiple ? getAnswersForQuestion(question.id) : undefined
                             }
-                            onChange={(optionId) => setAnswer(question.id, optionId)}
+                            onChange={(optionId) => handleAnswer(question.id, optionId)}
                           />
                         </div>
                       </div>
@@ -306,6 +361,26 @@ export default function SurveyPage() {
                       >
                         <CheckCircle className="h-4 w-4" />
                         <span className="text-sm font-medium">All Answered</span>
+                      </motion.div>
+                    )}
+
+                    {countdown !== null && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-2"
+                      >
+                        <span className="text-sm font-medium text-orange-600 dark:text-orange-400">
+                          Next page in {countdown}s
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={cancelCountdown}
+                          className="h-7 px-2 text-xs border-orange-400 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        >
+                          Cancel
+                        </Button>
                       </motion.div>
                     )}
 
